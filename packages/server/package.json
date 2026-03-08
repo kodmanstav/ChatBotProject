@@ -7,7 +7,9 @@
       "start": "bun run index.ts",
       "dev": "bun --watch run index.ts",
       "processor": "bun run src/processor.ts",
-    "analytics": "bun run src/analytics.ts"
+    "analytics": "bun run src/analytics.ts",
+    "pii-producer": "bun run src/pii-producer.ts",
+    "insight-aggregator": "bun run src/insight-aggregator.ts"
    },
    "devDependencies": {
       "@types/bun": "latest",
