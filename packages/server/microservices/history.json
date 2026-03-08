@@ -1,0 +1,476 @@
+{
+  "6a3157b8-80c6-4fd5-9c27-4a38e0d80f95": [],
+  "fbd8bd0f-0243-4e30-b849-42b9e548e6b3": [
+    {
+      "role": "user",
+      "content": "כמה חם בתל אביב?",
+      "ts": 1768846393756
+    },
+    {
+      "role": "assistant",
+      "content": "ב-Tel Aviv עכשיו בערך 11.7°C, רוח 8.8 קמ\"ש.",
+      "ts": 1768846394381
+    },
+    {
+      "role": "user",
+      "content": "היי",
+      "ts": 1768846403771
+    },
+    {
+      "role": "assistant",
+      "content": "היי! איך אני יכול לעזור לך היום?",
+      "ts": 1768846405464
+    },
+    {
+      "role": "user",
+      "content": "כמה חם בתל אביב?",
+      "ts": 1768846410084
+    },
+    {
+      "role": "assistant",
+      "content": "ב-Tel Aviv עכשיו בערך 11.7°C, רוח 8.8 קמ\"ש.",
+      "ts": 1768846410260
+    },
+    {
+      "role": "user",
+      "content": "?",
+      "ts": 1768846414914
+    },
+    {
+      "role": "assistant",
+      "content": "סליחה על הבלבול! אין לי את המידע על הטמפרטורה הנוכחית. אני ממליץ לבדוק אתר מזג האוויר או אפליקציה כדי לקבל את המידע העדכני ביותר. איך עוד אפשר לעזור לך?",
+      "ts": 1768846416635
+    },
+    {
+      "role": "user",
+      "content": "12 ועוד 13?",
+      "ts": 1768846422702
+    },
+    {
+      "role": "assistant",
+      "content": "25",
+      "ts": 1768846422712
+    },
+    {
+      "role": "user",
+      "content": "היי",
+      "ts": 1768846425972
+    },
+    {
+      "role": "assistant",
+      "content": "היי שוב! מה שלומך? איך אפשר לעזור לך?",
+      "ts": 1768846427610
+    },
+    {
+      "role": "user",
+      "content": "היי",
+      "ts": 1768846495121
+    },
+    {
+      "role": "assistant",
+      "content": "היי! איך אני יכול לעזור לך היום?",
+      "ts": 1768846495880
+    },
+    {
+      "role": "user",
+      "content": "כמה זה 12 ועוד 10",
+      "ts": 1768846504104
+    },
+    {
+      "role": "assistant",
+      "content": "22",
+      "ts": 1768846504117
+    },
+    {
+      "role": "user",
+      "content": "כמה זה 12 ועוד 10?",
+      "ts": 1768846515206
+    },
+    {
+      "role": "assistant",
+      "content": "22",
+      "ts": 1768846515219
+    }
+  ],
+  "7954fbd3-a93e-4ab4-a796-74e2082c95b6": [
+    {
+      "role": "user",
+      "content": "כמה זה 12 ועוד 20?",
+      "ts": 1768846569991
+    },
+    {
+      "role": "assistant",
+      "content": "32",
+      "ts": 1768846569999
+    },
+    {
+      "role": "user",
+      "content": "כמה חם בתל אביב?",
+      "ts": 1768846578102
+    },
+    {
+      "role": "assistant",
+      "content": "ב-Tel Aviv עכשיו בערך 11.6°C, רוח 8.7 קמ\"ש.",
+      "ts": 1768846578740
+    },
+    {
+      "role": "user",
+      "content": "היי",
+      "ts": 1768847326417
+    },
+    {
+      "role": "assistant",
+      "content": "היי! איך אני יכול לעזור לך היום?",
+      "ts": 1768847328207
+    }
+  ],
+  "c1c2c4ba-2a9b-4ae2-8669-91b073b86191": [
+    {
+      "role": "user",
+      "content": "הי",
+      "ts": 1768847474195
+    },
+    {
+      "role": "assistant",
+      "content": "היי! איך אני יכול לעזור לך היום?",
+      "ts": 1768847476096
+    }
+  ],
+  "demo-user": [
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773002126760
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773002157172
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773002286995
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773002287021
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773002296376
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773002296409
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773002391255
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773002391273
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773002557544
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773002557576
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773002560419
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773002560427
+    },
+    {
+      "role": "user",
+      "content": "how much is 1 USD?",
+      "ts": 1773002671757
+    },
+    {
+      "role": "assistant",
+      "content": "1 USD ≈ 3.7 ₪ ",
+      "ts": 1773002671835
+    },
+    {
+      "role": "user",
+      "content": "how much is 100usd?",
+      "ts": 1773002687313
+    },
+    {
+      "role": "assistant",
+      "content": "1 USD ≈ 3.7 ₪ ",
+      "ts": 1773002687344
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773003032586
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773003032620
+    },
+    {
+      "role": "user",
+      "content": "what is the weather in lindon?",
+      "ts": 1773003049819
+    },
+    {
+      "role": "assistant",
+      "content": "Tel Aviv: 11.6°C, Sunny, wind 3.6 km/h",
+      "ts": 1773003050584
+    },
+    {
+      "role": "user",
+      "content": "what is the weather in london?",
+      "ts": 1773003067561
+    },
+    {
+      "role": "assistant",
+      "content": "Tel Aviv: 11.6°C, Sunny, wind 3.6 km/h",
+      "ts": 1773003068013
+    },
+    {
+      "role": "user",
+      "content": "what is the weather in london?",
+      "ts": 1773003631568
+    },
+    {
+      "role": "assistant",
+      "content": "Tel Aviv: 11.4°C, Sunny, wind 3.3 km/h",
+      "ts": 1773003632324
+    },
+    {
+      "role": "user",
+      "content": ": Tel Aviv: 11.6°C, Sunny, wind 3.6 km/h",
+      "ts": 1773003715349
+    },
+    {
+      "role": "user",
+      "content": "> what is the weather in london?",
+      "ts": 1773003715396
+    },
+    {
+      "role": "user",
+      "content": "bot: Tel Aviv: 11.4°C, Sunny, wind 3.3 km/h",
+      "ts": 1773003715403
+    },
+    {
+      "role": "user",
+      "content": ">",
+      "ts": 1773003715406
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \">\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773003715768
+    },
+    {
+      "role": "assistant",
+      "content": "Tel Aviv: 11.4°C, Sunny, wind 3.3 km/h",
+      "ts": 1773003716427
+    },
+    {
+      "role": "user",
+      "content": "> > what is the weather in london?",
+      "ts": 1773003725999
+    },
+    {
+      "role": "assistant",
+      "content": "Tel Aviv: 11.4°C, Sunny, wind 3.3 km/h",
+      "ts": 1773003726210
+    },
+    {
+      "role": "user",
+      "content": "> what is the weather in london?",
+      "ts": 1773003732363
+    },
+    {
+      "role": "assistant",
+      "content": "Tel Aviv: 11.4°C, Sunny, wind 3.3 km/h",
+      "ts": 1773003732562
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773004255827
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773004255980
+    },
+    {
+      "role": "user",
+      "content": "london",
+      "ts": 1773004264047
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"london\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773004264136
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773004807869
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773004807922
+    },
+    {
+      "role": "user",
+      "content": "Why do I feel overwhelmed with work?",
+      "ts": 1773004823013
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"Why do I feel overwhelmed with work?\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773004823066
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005139528
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005139618
+    },
+    {
+      "role": "user",
+      "content": "politics",
+      "ts": 1773005152744
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"politics\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005152815
+    },
+    {
+      "role": "user",
+      "content": "what do you think about the priminister of israel?",
+      "ts": 1773005188102
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"what do you think about the priminister of israel?\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005188161
+    },
+    {
+      "role": "user",
+      "content": "?",
+      "ts": 1773005254263
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"?\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005254306
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005346856
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005346935
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005384812
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005390289
+    },
+    {
+      "role": "user",
+      "content": "ין",
+      "ts": 1773005703559
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005709090
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005709152
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005771648
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005771719
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005804942
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005804981
+    },
+    {
+      "role": "user",
+      "content": "hii",
+      "ts": 1773005920694
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hii\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005920730
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773005999684
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773005999729
+    },
+    {
+      "role": "user",
+      "content": "hi",
+      "ts": 1773006044860
+    },
+    {
+      "role": "assistant",
+      "content": "קיבלתי: \"hi\". (חסר OPENAI_API_KEY כדי לענות עם LLM)",
+      "ts": 1773006044910
+    }
+  ]
+}

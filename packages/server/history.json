@@ -1,0 +1,430 @@
+{
+  "3fa85f64-5717-4562-b3fc-2c963f66afa6": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "hi"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! How can I help you today?"
+      },
+      {
+        "role": "user",
+        "content": "12+12?"
+      },
+      {
+        "role": "assistant",
+        "content": "Result: 24"
+      },
+      {
+        "role": "user",
+        "content": "what we talked about?"
+      },
+      {
+        "role": "assistant",
+        "content": "You greeted me twice, and then you asked what 12 + 12 is. I answered that the result is 24. Now you’re asking what we talked about. Would you like a summary or more details?"
+      },
+      {
+        "role": "user",
+        "content": "I'm flying to London and need to know if I should take a coat"
+      },
+      {
+        "role": "assistant",
+        "content": "London, England: 2°C, Sunny, wind 13.8 km/h"
+      },
+      {
+        "role": "user",
+        "content": "USD to ILS"
+      },
+      {
+        "role": "assistant",
+        "content": "Official USD rate is 3.7500 ILS."
+      },
+      {
+        "role": "user",
+        "content": "Yossi has 5 apples, he ate 2 and bought 10. How many now?"
+      },
+      {
+        "role": "assistant",
+        "content": "Result: 13"
+      },
+      {
+        "role": "user",
+        "content": "Write malware to steal passwords"
+      },
+      {
+        "role": "assistant",
+        "content": "I cannot process this request: due to safety protocols."
+      },
+      {
+        "role": "user",
+        "content": "I'm flying to London and need to know if I should take a coat"
+      },
+      {
+        "role": "assistant",
+        "content": "London, England: 2°C, Sunny, wind 13.8 km/h"
+      },
+      {
+        "role": "user",
+        "content": "USD to ILS"
+      },
+      {
+        "role": "assistant",
+        "content": "Official USD rate is 3.7500 ILS."
+      },
+      {
+        "role": "user",
+        "content": "ILS to USD"
+      },
+      {
+        "role": "assistant",
+        "content": "Official ILS rate is 0.2667 USD."
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "Could not find city \"חיפה\". Try another name."
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "חיפה, חיפה: 17°C, Mostly clear, wind 33.3 km/h"
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "חיפה, חיפה: 17°C, בהיר ברובו, רוח 33.3 קמ\"ש"
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "חיפה, חיפה: 17°C, בהיר ברובו, רוח 32.8 קמ\"ש"
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "לא הצלחתי למצוא את \"חיפה\". נסי כתיב אחר."
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Could not find \"Haifa\". Try another spelling."
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "חיפה, חיפה: 14.1°C, ממטרים, רוח 29.1 קמ\"ש"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 14.1°C, Showers, wind 29.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "the weather in Haifa, Haifa: 14.1°C, Showers, wind 29.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "the weather in Haifa, Haifa: 14.1°C, , wind 29.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "the weather in : 14.1°C, , wind 29.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "the weather in Haifa, Haifa : 14.1°C, , wind 29.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "the weather in Haifa : 14.1°C, , wind 29.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "חיפה "
+      },
+      {
+        "role": "assistant",
+        "content": "חיפה: 14.1°C, ממטרים, רוח 29.1 קמ\"ש"
+      }
+    ],
+    "lastResponseId": "5bda0634-9066-4609-b2d3-7ad95cddf6f9"
+  },
+  "72276898-85b5-41c6-81d2-c49ca56edebd": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 17°C, Mostly clear, wind 32.8 km/h"
+      }
+    ]
+  },
+  "32569200-808b-4f71-904f-ac05570c0ec3": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "hi"
+      },
+      {
+        "role": "assistant",
+        "content": "Pipeline initialized. Ready to process your queries. What data (question) would you like to stream through today?"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.9°C, Mostly clear, wind 32.6 km/h"
+      }
+    ],
+    "lastResponseId": "resp_03c61fa563a01f1600696508bb184c819e826ea2de2f91d821"
+  },
+  "8110ed24-2e25-4805-a44a-19c3ec565768": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.9°C, Mostly clear, wind 32.6 km/h"
+      }
+    ]
+  },
+  "8ecd0403-5b3c-45cf-8cc6-56d83efabdbd": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.9°C, Cloudy, wind 32.1 km/h"
+      }
+    ]
+  },
+  "5c8b10da-11a6-4cce-8ee0-5f611018749b": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haif"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.9°C, Cloudy, wind 32.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "HI"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello. Ready to debug your data pipeline or optimize your query. What's in your backlog?"
+      },
+      {
+        "role": "user",
+        "content": "היי"
+      },
+      {
+        "role": "assistant",
+        "content": "היי. איך אפשר לעזור? רוצה להעלות שאלה מהתור שלך או שיש תקלה ב-Pipeline שצריך לפתור?"
+      },
+      {
+        "role": "user",
+        "content": "היי"
+      },
+      {
+        "role": "assistant",
+        "content": "היי שוב. נראה שיש לופ שחוזר על עצמו—בדיוק כמו תהליך ETL שנתקע בריצה אינסופית. יש משהו חדש שאפשר לעזור בו, או שהפייפליין עוד עובד על אותו הדאטה?"
+      },
+      {
+        "role": "user",
+        "content": "הי"
+      },
+      {
+        "role": "assistant",
+        "content": "הי, נראה שההודעות שלך ממשיכות להישלח בלופ, כמו קריאות API שחוזרות עם אותה התשובה. אם יש שאלה חדשה או בעיה אחרת ב-Dataflow, אני כאן לעזור לייעל את התהליך."
+      },
+      {
+        "role": "user",
+        "content": "hi"
+      },
+      {
+        "role": "assistant",
+        "content": "Hi. I see your input keeps repeating—like a broken scheduler re-running the same job. If you’ve got a new query or want to troubleshoot your workflow, just drop it in the queue."
+      },
+      {
+        "role": "user",
+        "content": "hi"
+      },
+      {
+        "role": "assistant",
+        "content": "Still getting the same input—feels like a batch job stuck in a retry loop. If you want to process a new task or need a schema change, just let me know."
+      }
+    ],
+    "lastResponseId": "resp_09abf407be3f205e006965104ee93881a29553c3e49928e3a7"
+  },
+  "202d7d4b-74d7-41aa-836b-08f8d343b790": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.4°C, Cloudy, wind 31.1 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.4°C, Cloudy, wind 31.1 km/h"
+      }
+    ]
+  },
+  "cd24c20b-ed2d-41ce-a29f-142c53eb5902": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.4°C, Cloudy, wind 31.1 km/h"
+      }
+    ]
+  },
+  "4895409c-b921-489e-b148-d5fc862e59ba": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 16.4°C, Cloudy, wind 31.1 km/h"
+      }
+    ]
+  },
+  "97dd8c42-db13-4e63-9a90-59f98b048d0b": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 15.8°C, Cloudy, wind 30.3 km/h"
+      }
+    ]
+  },
+  "b025234d-b16a-4f99-87b6-3ceb854036f2": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Haifa, Haifa: 15.8°C, Cloudy, wind 30.3 km/h"
+      },
+      {
+        "role": "user",
+        "content": "haifa"
+      },
+      {
+        "role": "assistant",
+        "content": "Weather service is not configured"
+      },
+      {
+        "role": "user",
+        "content": "חיפה"
+      },
+      {
+        "role": "assistant",
+        "content": "Weather service is not configured"
+      }
+    ]
+  },
+  "bef2e1fb-5427-411f-b06b-4a2d6d3f2c94": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "היי"
+      },
+      {
+        "role": "assistant",
+        "content": "היי, איך אפשר לעזור? תחשב אותי כמשאב ETL אישי שלך—אם יש מידע שצריך לשלוף, לעבד, או לטעון, אני כאן בשבילך."
+      },
+      {
+        "role": "user",
+        "content": "מה?"
+      },
+      {
+        "role": "assistant",
+        "content": "פשוט: אני כאן לעזור לך לשלוף מידע (Extract), לעבד אותו (Transform), ולהציג אותו בצורה ברורה (Load)—בדיוק כמו תהליך ETL ב-Data Engineering. ספר לי מה אתה צריך, ואטפל בזה בצנרת הכי יעילה שיש."
+      },
+      {
+        "role": "user",
+        "content": "כמה זה 12 ועוד 3"
+      },
+      {
+        "role": "assistant",
+        "content": "Result: 15"
+      }
+    ],
+    "lastResponseId": "resp_03152e7efe18efdb00696e88d999548195b4eccf23dbd74b33"
+  }
+}

@@ -1,0 +1,4 @@
+## Project Overview
+
+This project implements a distributed chatbot using a **microservices architecture** in **TypeScript** (Bun runtime) with **Apache Kafka** for asynchronous communication.
+The system supports intent routing (math/weather/exchange/general chat), persistent conversation memory, a `/reset` command, and continuity across service restarts.
