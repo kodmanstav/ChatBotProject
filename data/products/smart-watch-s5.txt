@@ -1,0 +1,21 @@
+Product: Smart Watch S5
+
+Description:
+The Smart Watch S5 is a modern smartwatch designed for fitness tracking and daily use.
+
+Features:
+- Heart rate monitoring
+- Sleep tracking
+- GPS support
+- Water resistant up to 50 meters
+- Bluetooth connectivity
+
+Battery:
+Up to 7 days of battery life with normal usage.
+
+Compatibility:
+Compatible with Android and iOS devices.
+
+Price:
+$199
+

@@ -48,5 +48,9 @@ services:
         sleep 5
         kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic raw-reviews-topic --partitions 1 --replication-factor 1
         kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic processed-insights-topic --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user-commands --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic conversation-events --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic tool-invocation-requests --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dead-letter-queue --partitions 1 --replication-factor 1
         echo "Topics created."
     restart: "no"

@@ -1,0 +1,21 @@
+Product: Laptop Pro
+
+Description:
+Laptop Pro is a high‑performance laptop designed for professionals who need power and portability.
+
+Features:
+- 15.6\" Retina-quality display
+- Latest-generation multi-core processor
+- 16 GB or 32 GB RAM options
+- Fast NVMe SSD storage
+- Backlit keyboard and large trackpad
+
+Battery:
+Up to 10 hours of mixed productivity use.
+
+Compatibility:
+Supports all major operating systems and modern peripherals over USB‑C and HDMI.
+
+Price:
+Starting at $1,499
+

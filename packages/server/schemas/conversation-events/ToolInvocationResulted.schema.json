@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ToolInvocationResulted",
+  "type": "object",
+  "required": ["eventType", "conversationId", "timestamp", "payload"],
+  "properties": {
+    "eventType": { "const": "ToolInvocationResulted" },
+    "conversationId": { "type": "string" },
+    "timestamp": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "required": ["tool", "success", "result"],
+      "properties": {
+        "step": { "type": "integer" },
+        "tool": { "type": "string" },
+        "success": { "type": "boolean" },
+        "result": {},
+        "error": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

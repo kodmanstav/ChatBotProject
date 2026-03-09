@@ -1,0 +1,21 @@
+Product: Gaming Mouse G7
+
+Description:
+Gaming Mouse G7 is a lightweight wired gaming mouse optimized for precision and fast reaction times.
+
+Features:
+- Adjustable DPI up to 16,000
+- Customizable RGB lighting
+- 6 programmable buttons
+- Low-latency wired USB connection
+- Textured side grips for better control
+
+Battery:
+Not applicable (wired USB power).
+
+Compatibility:
+Compatible with Windows, macOS, and Linux. Works with popular game launchers.
+
+Price:
+$79
+
