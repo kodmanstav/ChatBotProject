@@ -10,8 +10,7 @@ No markdown.
 No explanations.
 No text before or after the JSON.
 
-The JSON schema is:
-
+The JSON must follow this structure:
 {
   "plan": [
     {
@@ -33,38 +32,23 @@ Allowed tools:
 - orchestrationSynthesis
 
 Rules:
-- step starts at 1
+- step starts from 1
 - plan must be an array
 - parameters must be an object
 - final_answer_synthesis_required must be boolean
 
+Important routing rule:
+- If the user's request depends on external factual data such as weather, exchange rates, or product data, do NOT use generalChat alone.
+- First call the appropriate retrieval/tool step.
+- Then add a second step using generalChat or orchestrationSynthesis if reasoning is needed.
+
 Tool parameter rules:
-
-generalChat:
-{
-  "userInput": "full original user message"
-}
-
-getWeather:
-{
-  "location": "city name"
-}
-
-getExchangeRate:
-{
-  "from": "USD",
-  "to": "ILS"
-}
-
-calculateMath:
-{
-  "expression": "2+2"
-}
-
-getProductInformation:
-{
-  "query": "product description"
-}
+- generalChat: parameters.userInput must contain the full user message or a derived reasoning prompt.
+- getWeather: parameters.location must contain only the location name.
+- getExchangeRate: parameters.from and parameters.to must be currency codes.
+- calculateMath: parameters.expression must be a valid math expression.
+- getProductInformation: parameters.query must describe the product question.
+- ragGeneration: parameters.question must contain the user question.
 
 Examples:
 
@@ -117,8 +101,28 @@ User: how much is 100 USD in ILS?
   ],
   "final_answer_synthesis_required": true
 }
-`;
 
+User: I'm flying to London tomorrow, should I bring a coat?
+{
+  "plan": [
+    {
+      "step": 1,
+      "tool": "getWeather",
+      "parameters": {
+        "location": "London"
+      }
+    },
+    {
+      "step": 2,
+      "tool": "generalChat",
+      "parameters": {
+        "userInput": "Weather in London tomorrow is {{steps.1.forecast}}. Should the user bring a coat?"
+      }
+    }
+  ],
+  "final_answer_synthesis_required": false
+}
+`;
 /**
  * Router prompt: classify text as a product/service review (analyzeReview) or casual chat (generalChat).
  * Return JSON only: { "intent": "analyzeReview" | "generalChat" }

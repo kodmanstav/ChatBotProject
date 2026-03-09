@@ -22,11 +22,52 @@ function isToolRequest(payload: unknown): payload is {
    return (p as Record<string, unknown>).tool === TOOL_NAME;
 }
 
-function getWeather(location: string): { location: string; forecast: string } {
-   const loc = (location || 'Unknown').trim() || 'Unknown';
+interface GeoApiResponse {
+   results?: Array<{
+      latitude: number;
+      longitude: number;
+   }>;
+}
+
+interface WeatherApiResponse {
+   current_weather?: {
+      temperature?: number;
+   };
+}
+
+async function getWeather(
+   location: string
+): Promise<{ location: string; forecast: string }> {
+   const loc = location.trim();
+
+   const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1`;
+
+   const geoRes = await fetch(geoUrl);
+   const geoData = (await geoRes.json()) as GeoApiResponse;
+
+   if (!geoData.results || geoData.results.length === 0) {
+      return {
+         location: loc,
+         forecast: `Weather data not found for ${loc}`,
+      };
+   }
+
+   const firstResult = geoData.results[0]!;
+   const { latitude, longitude } = firstResult;
+
+   const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
+
+   const weatherRes = await fetch(weatherUrl);
+   const weatherData = (await weatherRes.json()) as WeatherApiResponse;
+
+   const temp =
+      typeof weatherData.current_weather?.temperature === 'number'
+         ? weatherData.current_weather.temperature
+         : null;
+
    return {
       location: loc,
-      forecast: `Sunny, 25°C (simulated for ${loc})`,
+      forecast: temp === null ? 'Weather data unavailable' : `${temp}°C`,
    };
 }
 
@@ -58,7 +99,7 @@ async function main(): Promise<void> {
             `[Weather Worker] Processing getWeather for ${conversationId}`
          );
 
-         const result = getWeather(location);
+         const result = await getWeather(location);
          const out = {
             eventType: 'ToolInvocationResulted',
             conversationId,

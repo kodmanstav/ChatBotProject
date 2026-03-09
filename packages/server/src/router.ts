@@ -95,7 +95,12 @@ function looksLikeWeather(input: string): boolean {
       s.includes('temperature') ||
       s.includes('forecast') ||
       s.includes('rain') ||
-      s.includes('sunny')
+      s.includes('sunny') ||
+      s.includes('cloudy') ||
+      s.includes('coat') ||
+      s.includes('umbrella') ||
+      s.includes('flying to') ||
+      s.includes('should i bring')
    );
 }
 
@@ -129,11 +134,60 @@ function extractCurrencies(input: string): { from: string; to: string } | null {
       const from = codes[0];
       const to = codes[1];
 
-      if (!from || !to) {
-         return null;
-      }
-
+      if (!from || !to) return null;
       return { from, to };
+   }
+
+   return null;
+}
+
+function cleanExtractedLocation(location: string): string {
+   return location
+      .replace(
+         /\b(today|tomorrow|tonight|now|this week|next week|this weekend)\b/gi,
+         ''
+      )
+      .replace(/[?,.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+}
+
+function extractCityFromWeatherQuery(input: string): string | null {
+   const normalized = input.trim();
+
+   const patterns = [
+      /\b(?:in|for)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)/i,
+      /\bflying to\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)/i,
+      /\btravel(?:ing)? to\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)/i,
+      /\bgoing to\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)/i,
+   ];
+
+   for (const pattern of patterns) {
+      const match = normalized.match(pattern);
+      if (match?.[1]) {
+         const cleaned = cleanExtractedLocation(match[1]);
+         if (cleaned) return cleaned;
+      }
+   }
+
+   const knownCities = [
+      'London',
+      'Paris',
+      'Tel Aviv',
+      'Jerusalem',
+      'New York',
+      'Bangkok',
+      'Hanoi',
+      'Tokyo',
+      'Rome',
+      'Berlin',
+   ];
+
+   const lower = normalized.toLowerCase();
+   for (const city of knownCities) {
+      if (lower.includes(city.toLowerCase())) {
+         return city;
+      }
    }
 
    return null;
@@ -142,6 +196,7 @@ function extractCurrencies(input: string): { from: string; to: string } | null {
 type InferredWorkflow =
    | { kind: 'math'; expression: string }
    | { kind: 'weather'; query: string }
+   | { kind: 'weather-advice'; query: string }
    | { kind: 'exchange-rate'; from: string; to: string }
    | { kind: 'exchange-conversion'; amount: number; from: string; to: string }
    | { kind: 'product-info'; query: string }
@@ -157,7 +212,6 @@ function inferWorkflow(userInput: string): InferredWorkflow {
 
    const lower = userInput.toLowerCase();
 
-   // Heuristic: product information queries
    if (
       lower.includes('smart watch s5') ||
       lower.includes('smartwatch s5') ||
@@ -188,6 +242,21 @@ function inferWorkflow(userInput: string): InferredWorkflow {
          kind: 'exchange-rate',
          from: currencies.from,
          to: currencies.to,
+      };
+   }
+
+   const looksLikeAdviceQuestion =
+      lower.includes('should i bring') ||
+      lower.includes('do i need') ||
+      lower.includes('should i take') ||
+      lower.includes('bring a coat') ||
+      lower.includes('take a coat') ||
+      lower.includes('umbrella');
+
+   if (looksLikeWeather(userInput) && looksLikeAdviceQuestion) {
+      return {
+         kind: 'weather-advice',
+         query: userInput,
       };
    }
 
@@ -227,19 +296,55 @@ function buildFallbackPlan(userInput: string): GeneratedPlan {
             final_answer_synthesis_required: false,
          };
 
-      case 'weather':
+      case 'weather-advice': {
+         const city = extractCityFromWeatherQuery(workflow.query) ?? 'London';
+
          return {
             plan: [
                {
                   step: 1,
                   tool: 'getWeather',
                   parameters: {
-                     query: workflow.query,
+                     location: city,
+                  },
+               },
+               {
+                  step: 2,
+                  tool: 'generalChat',
+                  parameters: {
+                     userInput: `Weather in ${city} is {{steps.1.result.forecast}}.
+Decide whether the user should bring a coat.
+
+Rules:
+- If temperature is below 18°C -> "Yes, bring a coat - it will be cold."
+- If it is rainy -> "Yes, bring a coat - it will be rainy."
+- If temperature is 18°C or above and not rainy -> "No, you do not need a coat - it will be warm."
+
+Return only one sentence. No extra explanation.`,
                   },
                },
             ],
             final_answer_synthesis_required: false,
          };
+      }
+
+      case 'weather': {
+         const city =
+            extractCityFromWeatherQuery(workflow.query) ?? workflow.query;
+
+         return {
+            plan: [
+               {
+                  step: 1,
+                  tool: 'getWeather',
+                  parameters: {
+                     location: city,
+                  },
+               },
+            ],
+            final_answer_synthesis_required: false,
+         };
+      }
 
       case 'exchange-rate':
          return {
@@ -300,7 +405,6 @@ function buildFallbackPlan(userInput: string): GeneratedPlan {
                   step: 1,
                   tool: 'generalChat',
                   parameters: {
-                     // Pass the user input under the key expected by the LLM worker
                      userInput: workflow.message,
                   },
                },
@@ -308,6 +412,68 @@ function buildFallbackPlan(userInput: string): GeneratedPlan {
             final_answer_synthesis_required: false,
          };
    }
+}
+
+function maybeUpgradePlan(
+   userInput: string,
+   plan: GeneratedPlan
+): GeneratedPlan {
+   const text = userInput.toLowerCase();
+
+   const isSingleGeneralChat =
+      plan?.plan?.length === 1 && plan.plan[0]?.tool === 'generalChat';
+
+   const isSingleWeather =
+      plan?.plan?.length === 1 && plan.plan[0]?.tool === 'getWeather';
+
+   const looksLikeWeatherAdvice =
+      text.includes('weather') ||
+      text.includes('forecast') ||
+      text.includes('rain') ||
+      text.includes('coat') ||
+      text.includes('umbrella') ||
+      text.includes('flying to') ||
+      text.includes('should i bring');
+
+   if (looksLikeWeatherAdvice && (isSingleGeneralChat || isSingleWeather)) {
+      const locationFromPlan =
+         typeof plan.plan[0]?.parameters?.location === 'string'
+            ? cleanExtractedLocation(String(plan.plan[0].parameters.location))
+            : null;
+
+      const city =
+         extractCityFromWeatherQuery(userInput) || locationFromPlan || 'London';
+
+      return {
+         plan: [
+            {
+               step: 1,
+               tool: 'getWeather',
+               parameters: {
+                  location: city,
+               },
+            },
+            {
+               step: 2,
+               tool: 'generalChat',
+               parameters: {
+                  userInput: `Weather in ${city} is {{steps.1.result.forecast}}.
+Decide whether the user should bring a coat.
+
+Rules:
+- If temperature is below 18°C -> answer: "Yes, bring a coat."
+- If it is rainy -> answer: "Yes, bring a coat."
+- If temperature is 18°C or above and not rainy -> answer: "No, you do not need a coat."
+
+Return only one short sentence. No extra explanation.`,
+               },
+            },
+         ],
+         final_answer_synthesis_required: false,
+      };
+   }
+
+   return plan;
 }
 
 function isValidPlan(plan: unknown): plan is GeneratedPlan {
@@ -398,6 +564,8 @@ async function main(): Promise<void> {
                );
                plan = buildFallbackPlan(userInput);
             }
+
+            plan = maybeUpgradePlan(userInput, plan);
 
             console.log(
                `[Router] Generated plan with ${plan.plan.length} step(s)`
