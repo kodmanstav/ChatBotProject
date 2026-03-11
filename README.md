@@ -30,7 +30,6 @@ This project implements a distributed chatbot using a **microservices architectu
 - ⚡ **Asynchronous processing via Kafka topics**
 ---
 
-```md
 ## 🏗️ Architecture
 
 ```mermaid
@@ -85,21 +84,6 @@ flowchart TD
     CE --> CLI
 ```
 
-
-```md
-## 🏗️ High-Level Flow
-
-```mermaid
-flowchart LR
-    User --> CLI
-    CLI --> Router
-    Router --> Orchestrator
-    Orchestrator --> Workers
-    Workers --> Aggregator
-    Aggregator --> Synthesis
-    Synthesis --> CLI
-
-    ```md
 ## 🧩 Components
 
 | Component | Responsibility |
