@@ -29,77 +29,87 @@ This project implements a distributed chatbot using a **microservices architectu
 - 🧹 `/reset` command for clearing conversation state
 - ⚡ **Asynchronous processing via Kafka topics**
 ---
+
+```md
 ## 🏗️ Architecture
 
-High-level flow for a generic query:
+```mermaid
+flowchart TD
+    U[👤 User]
+    CLI[💻 CLI]
+    
+    subgraph K[📡 Kafka]
+        UC[user-commands]
+        CE[conversation-events]
+        TI[tool-invocation-requests]
+    end
+
+    subgraph N[🟦 Node Services]
+        R[🧭 Router]
+        O[⚙️ Orchestrator]
+        A[📦 Aggregator]
+        S[✨ Synthesis Worker]
+    end
+
+    subgraph W[🔧 Workers]
+        M[➗ Math]
+        WE[🌦️ Weather]
+        FX[💱 Exchange Rate]
+        L[🤖 LLM Worker]
+        RG[🐍 RAG Worker]
+    end
+
+    U --> CLI
+    CLI --> UC
+    UC --> R
+    R --> CE
+    CE --> O
+    O --> TI
+
+    TI --> M
+    TI --> WE
+    TI --> FX
+    TI --> L
+    TI --> RG
+
+    M --> CE
+    WE --> CE
+    FX --> CE
+    L --> CE
+    RG --> CE
+
+    CE --> A
+    A --> UC
+    UC --> S
+    S --> CE
+    CE --> CLI
+```
+
+
+```md
+## 🏗️ High-Level Flow
 
 ```mermaid
 flowchart LR
-  subgraph client ["Client"]
-    UI["user-interface.ts\n(Bun CLI)"]
-  end
+    User --> CLI
+    CLI --> Router
+    Router --> Orchestrator
+    Orchestrator --> Workers
+    Workers --> Aggregator
+    Aggregator --> Synthesis
+    Synthesis --> CLI
 
-  subgraph kafka ["Kafka Topics"]
-    UC["user-commands\n(UserQueryReceived,\nSynthesizeFinalAnswerRequested)"]
-    CE["conversation-events\n(PlanGenerated,\nToolInvocationResulted,\nPlanCompleted,\nPlanFailed,\nFinalAnswerSynthesized)"]
-    TI["tool-invocation-requests\n(ToolInvocationRequested)"]
-    DLQ["dead-letter-queue"]
-  end
+    ```md
+## 🧩 Components
 
-  subgraph planning ["Planning & Orchestration (Node)"]
-    RT["router.ts\n(plan generator)"]
-    ORC["orchestrator.ts\nstateful plan runner"]
-    AGG["aggregator.ts\ncollect tool results"]
-    SYN["synthesis-worker.ts\nfinal answer"]
-  end
-
-  subgraph tools_node ["Tool Workers (Node)"]
-    MATH["math-worker.ts\ncalculateMath"]
-    WEATHER["weather-worker.ts\ngetWeather"]
-    FX["exchange-rate-worker.ts\ngetExchangeRate"]
-    LLMW["llm-inference-worker.ts\ngeneralChat / ragGeneration /\norchestrationSynthesis"]
-  end
-
-  subgraph tools_py ["Tool Workers (Python)"]
-    RAG["rag-retriever-worker.py\ngetProductInformation\n(RAG)"]
-  end
-
-  UI -->|"UserQueryReceived"| UC
-  UC -->|"UserQueryReceived"| RT
-  RT -->|"PlanGenerated"| CE
-  CE -->|"PlanGenerated"| ORC
-
-  ORC -->|"ToolInvocationRequested"| TI
-
-  TI --> MATH
-  TI --> WEATHER
-  TI --> FX
-  TI --> LLMW
-  TI --> RAG
-
-  MATH -->|"ToolInvocationResulted"| CE
-  WEATHER -->|"ToolInvocationResulted"| CE
-  FX -->|"ToolInvocationResulted"| CE
-  LLMW -->|"ToolInvocationResulted"| CE
-  RAG -->|"ToolInvocationResulted"| CE
-
-  CE -->|"ToolInvocationResulted,\nPlanCompleted,\nPlanFailed"| ORC
-  CE -->|"PlanCompleted"| AGG
-  AGG -->|"SynthesizeFinalAnswerRequested"| UC
-  UC -->|"SynthesizeFinalAnswerRequested"| SYN
-  SYN -->|"FinalAnswerSynthesized"| CE
-  CE -->|"FinalAnswerSynthesized"| UI
-
-  RT --> DLQ
-  ORC --> DLQ
-  MATH --> DLQ
-  WEATHER --> DLQ
-  FX --> DLQ
-  LLMW --> DLQ
-  RAG --> DLQ
-  AGG --> DLQ
-  SYN --> DLQ
-```
+| Component | Responsibility |
+|----------|----------------|
+| CLI | Accepts user input and displays final answer |
+| Router | Detects intent and creates plan |
+| Orchestrator | Executes the plan step by step |
+| Workers | Perform weather, math, fx, LLM, and RAG tasks |
+| Aggregator | Collects intermediate results |
+| Synthesis Worker | Produces the final response |
 ## 🧩 Main Components (Node)
 
 ### 💻 CLI
