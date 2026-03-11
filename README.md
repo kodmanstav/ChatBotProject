@@ -184,25 +184,26 @@ Each worker:
 - 🟢 **Node.js**
 - 🐍 **Python 3.10+**
 
-Environment variables (`packages/server/.env`):
-.
+Environment variables (`packages/server/.env`), for example:
+
+- `KAFKA_BROKERS=localhost:9092`
+- `OLLAMA_URL=http://localhost:11434/api/chat` (optional)
+- `OPENAI_API_KEY=...` (optional)
+
+---
+
 ### 🟡 1. Start Kafka
 
 From `packages/server`:
 
 ```bash
 docker compose up -d
+```
 
-
-
+---
 
 ### 🧱 2. Install Node dependencies
 
-```bash
-bun install
-
-```bash
-bun install
 From `packages/server`:
 
 ```bash
@@ -211,12 +212,9 @@ bun install
 
 ---
 
-# Run services
-
-```md
 ### ⚙️ 3. Run Node services
 
-Open **multiple terminals**:
+From `packages/server`, open **multiple terminals** and run:
 
 ```bash
 bun run router
@@ -227,9 +225,13 @@ bun run exchange-rate-worker
 bun run llm-inference-worker
 bun run aggregator
 bun run synthesis-worker
+```
+
 These cover planning, orchestration, math/weather/fx tools, LLM inference, aggregation, and final synthesis.
 
-### 5. Install and run Python workers
+---
+
+### 🐍 4. Install and run Python workers
 
 From `python-workers`:
 
@@ -240,15 +242,17 @@ python rag-retriever-worker.py
 
 This enables the `getProductInformation` / RAG flow for product questions.
 
-### 6. Launch the CLI
+---
 
-From `packages/server/src`:
+### 💻 5. Launch the CLI
+
+From `packages/server`:
 
 ```bash
 bun run user-interface
 ```
 
-You should see a prompt:
+You should see a prompt like:
 
 ```text
 You>
@@ -260,7 +264,9 @@ Type queries and press Enter. The CLI:
 - Waits on `conversation-events` for a `FinalAnswerSynthesized` event with the same `conversationId`.
 - Prints `Assistant: ...` when the final answer arrives.
 
-### 7. Example queries
+---
+
+### 🧪 6. Example queries
 
 - **Orchestration (exchange conversion):**  
   `how much is 100 USD in ILS?`
@@ -271,7 +277,7 @@ Type queries and press Enter. The CLI:
 - **Weather advice:**  
   `I’m flying to London tomorrow, should I bring a coat?`
 
-### 8. Inspecting the execution log
+### 📜 7. Inspecting the execution log
 
 High‑level execution traces are written to:
 
