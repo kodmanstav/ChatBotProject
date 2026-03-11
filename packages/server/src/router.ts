@@ -2,7 +2,7 @@ import { createKafkaClient, TOPICS } from './kafka/client';
 import { runConsumer } from './kafka/consumer';
 import { publishValidated } from './kafka/producer';
 import { generatePlan } from './services/llm-router.service';
-import { logError } from './utils/logger';
+import { logError, logExecution } from './utils/logger';
 import type { PlanGeneratedEvent } from './types/events';
 
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
@@ -593,6 +593,12 @@ async function main(): Promise<void> {
                console.log(
                   `[Router] Published PlanGenerated for conversation ${conversationId}`
                );
+               logExecution('router', conversationId, 'PlanGenerated', {
+                  steps: plan.plan.length,
+                  tools: plan.plan.map((s) => s.tool),
+                  final_answer_synthesis_required:
+                     plan.final_answer_synthesis_required,
+               });
             } else {
                logError(
                   `[Router] Failed to publish PlanGenerated for conversation ${conversationId}`

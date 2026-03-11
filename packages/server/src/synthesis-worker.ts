@@ -3,6 +3,7 @@ import { runConsumer } from './kafka/consumer';
 import { publishValidated } from './kafka/producer';
 import { callOpenAI } from './services/llm-client';
 import { ORCHESTRATION_SYNTHESIS_PROMPT } from './prompts/orchestration-synthesis.prompt';
+import { logExecution } from './utils/logger';
 
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
@@ -77,6 +78,12 @@ async function main(): Promise<void> {
             '[Synthesis Worker] incoming planResults:',
             JSON.stringify(planResults, null, 2)
          );
+         logExecution(
+            'synthesis-worker',
+            conversationId,
+            'SynthesisRequested',
+            { keys: Object.keys(planResults ?? {}) }
+         );
 
          let finalAnswer: string;
          try {
@@ -99,6 +106,12 @@ async function main(): Promise<void> {
          }
 
          console.log('[Synthesis Worker] finalAnswer:', finalAnswer);
+         logExecution(
+            'synthesis-worker',
+            conversationId,
+            'FinalAnswerPrepared',
+            { length: finalAnswer.length }
+         );
 
          const out = {
             eventType: 'FinalAnswerSynthesized',

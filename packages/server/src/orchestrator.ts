@@ -11,7 +11,7 @@ import type {
    PlanCompletedEvent,
    PlanFailedEvent,
 } from './types/events';
-import { logError } from './utils/logger';
+import { logError, logExecution } from './utils/logger';
 
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
 const TOOL_INVOCATION_REQUESTS_TOPIC = TOPICS.TOOL_INVOCATION_REQUESTS;
@@ -174,6 +174,10 @@ async function main(): Promise<void> {
             console.log(
                `[Orchestrator] Initialized state for conversation ${conversationId}`
             );
+            logExecution('orchestrator', conversationId, 'PlanInitialized', {
+               steps: plan.length,
+               tools: plan.map((s) => s.tool),
+            });
 
             const resolved = resolveStepParameters(
                firstStep.parameters,
@@ -208,6 +212,10 @@ async function main(): Promise<void> {
                   '[Orchestrator] Resolved parameters:',
                   JSON.stringify(resolved, null, 2)
                );
+               logExecution('orchestrator', conversationId, 'StepDispatched', {
+                  step: firstStep.step,
+                  tool: firstStep.tool,
+               });
             }
 
             return;
@@ -224,6 +232,16 @@ async function main(): Promise<void> {
 
             console.log(
                `[Orchestrator] Received ToolInvocationResulted for step ${stepNum}`
+            );
+            logExecution(
+               'orchestrator',
+               conversationId,
+               'ToolInvocationResulted',
+               {
+                  step: stepNum,
+                  tool: pl.tool,
+                  success: pl.success,
+               }
             );
 
             if (!pl.success) {
@@ -253,6 +271,9 @@ async function main(): Promise<void> {
                console.log(
                   `[Orchestrator] Plan completed for conversation ${conversationId}`
                );
+               logExecution('orchestrator', conversationId, 'PlanCompleted', {
+                  steps: completedCount,
+               });
                stateStore.deletePlanState(conversationId);
                return;
             }
@@ -310,6 +331,10 @@ async function main(): Promise<void> {
                console.log(
                   `[Orchestrator] Dispatching step ${nextStep.step} -> ${nextStep.tool}`
                );
+               logExecution('orchestrator', conversationId, 'StepDispatched', {
+                  step: nextStep.step,
+                  tool: nextStep.tool,
+               });
             }
          }
       },

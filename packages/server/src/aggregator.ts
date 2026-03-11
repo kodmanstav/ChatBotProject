@@ -1,6 +1,7 @@
 import { createKafkaClient, TOPICS } from './kafka/client';
 import { runConsumerMulti } from './kafka/consumer';
 import { publishValidated } from './kafka/producer';
+import { logExecution } from './utils/logger';
 import type { SynthesizeFinalAnswerRequestedEvent } from './types/events';
 
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
@@ -66,6 +67,10 @@ async function main(): Promise<void> {
             }
             map[String(step)] = pl.result;
             console.log(`[Aggregator] Stored result for step ${step}`);
+            logExecution('aggregator', conversationId, 'ToolResultStored', {
+               step,
+               tool: pl.tool,
+            });
             return;
          }
 
@@ -93,6 +98,14 @@ async function main(): Promise<void> {
             if (ok) {
                console.log(
                   '[Aggregator] Published SynthesizeFinalAnswerRequested'
+               );
+               logExecution(
+                  'aggregator',
+                  conversationId,
+                  'SynthesizeFinalAnswerRequested',
+                  {
+                     completedSteps: pl.completedSteps,
+                  }
                );
             }
          }
