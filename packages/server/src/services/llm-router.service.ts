@@ -186,7 +186,7 @@ export async function generatePlan(userInput: string): Promise<Plan | null> {
       console.error('[LLM Router] Failed to parse JSON from LLM response');
       return null;
    }
-   const plan = normalizePlanPayload(parsed);
+   let plan = normalizePlanPayload(parsed);
    if (plan == null) {
       console.error(
          '[LLM Router] LLM response did not match expected plan structure'
@@ -196,6 +196,31 @@ export async function generatePlan(userInput: string): Promise<Plan | null> {
          JSON.stringify(parsed).slice(0, 500)
       );
       return null;
+   }
+   // Fix older placeholder style like {{steps.1.rate}} -> {{steps.1.result.rate}}
+   try {
+      plan = {
+         ...plan,
+         plan: plan.plan.map((step) => ({
+            ...step,
+            parameters: Object.fromEntries(
+               Object.entries(step.parameters).map(([key, value]) => {
+                  if (typeof value === 'string') {
+                     return [
+                        key,
+                        value.replace(
+                           /\{\{\s*steps\.(\d+)\.rate\s*\}\}/g,
+                           '{{steps.$1.result.rate}}'
+                        ),
+                     ];
+                  }
+                  return [key, value];
+               })
+            ),
+         })),
+      };
+   } catch (e) {
+      console.error('[LLM Router] Failed to post-process placeholders:', e);
    }
    return plan;
 }

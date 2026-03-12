@@ -17,6 +17,7 @@ It combines:
 - 💻 **CLI interface** that allows users to type natural-language queries and receive AI responses
 
 The same architecture supports **product-information RAG flows**, **review analysis**, and **tool orchestration**, all connected through **Kafka topics** and **JSON-schema-validated events**.
+
 ## 🧠 Project Overview
 
 This project implements a distributed chatbot using a **microservices architecture** in **TypeScript** (Bun runtime) with **Apache Kafka** for asynchronous communication.
@@ -28,6 +29,7 @@ This project implements a distributed chatbot using a **microservices architectu
 - 🔁 **Conversation continuity across service restarts**
 - 🧹 `/reset` command for clearing conversation state
 - ⚡ **Asynchronous processing via Kafka topics**
+
 ---
 
 ## 🏗️ Architecture
@@ -36,7 +38,7 @@ This project implements a distributed chatbot using a **microservices architectu
 flowchart TD
     U[👤 User]
     CLI[💻 CLI]
-    
+
     subgraph K[📡 Kafka]
         UC[user-commands]
         CE[conversation-events]
@@ -86,14 +88,15 @@ flowchart TD
 
 ## 🧩 Components
 
-| Component | Responsibility |
-|----------|----------------|
-| CLI | Accepts user input and displays final answer |
-| Router | Detects intent and creates plan |
-| Orchestrator | Executes the plan step by step |
-| Workers | Perform weather, math, fx, LLM, and RAG tasks |
-| Aggregator | Collects intermediate results |
-| Synthesis Worker | Produces the final response |
+| Component        | Responsibility                                |
+| ---------------- | --------------------------------------------- |
+| CLI              | Accepts user input and displays final answer  |
+| Router           | Detects intent and creates plan               |
+| Orchestrator     | Executes the plan step by step                |
+| Workers          | Perform weather, math, fx, LLM, and RAG tasks |
+| Aggregator       | Collects intermediate results                 |
+| Synthesis Worker | Produces the final response                   |
+
 ## 🧩 Main Components (Node)
 
 ### 💻 CLI
@@ -161,6 +164,7 @@ Each worker:
 - Emits `FinalAnswerSynthesized`
 
 ## ▶️ Running the System (Runbook)
+
 ### 🧰 Prerequisites
 
 - 🐳 **Docker & Docker Compose**
@@ -220,7 +224,7 @@ These cover planning, orchestration, math/weather/fx tools, LLM inference, aggre
 From `python-workers`:
 
 ```bash
-pip install -r requirements.txt
+python install -r requirements.txt
 python rag-retriever-worker.py
 ```
 
@@ -290,18 +294,18 @@ This system applies **event sourcing** at the integration level: the behavior of
 All events are JSON‑schema‑validated under `packages/server/schemas/**` and typed in `packages/server/src/types/events.ts`.
 
 - **Commands (user‑facing, on `user-commands`):**
-  - `UserQueryReceived` – emitted by `user-interface.ts` for each line the user types.
-  - `SynthesizeFinalAnswerRequested` – emitted by `aggregator.ts` when a plan is completed and all tool results are collected.
+   - `UserQueryReceived` – emitted by `user-interface.ts` for each line the user types.
+   - `SynthesizeFinalAnswerRequested` – emitted by `aggregator.ts` when a plan is completed and all tool results are collected.
 
 - **Conversation events (on `conversation-events`):**
-  - `PlanGenerated` – emitted by `router.ts` after a plan is inferred.
-  - `ToolInvocationResulted` – emitted by any tool worker after handling a `ToolInvocationRequested`.
-  - `PlanCompleted` – emitted by `orchestrator.ts` when all steps in the plan have succeeded.
-  - `PlanFailed` – emitted by `orchestrator.ts` when a step fails or placeholder resolution fails.
-  - `FinalAnswerSynthesized` – emitted by `synthesis-worker.ts` after building the final user answer.
+   - `PlanGenerated` – emitted by `router.ts` after a plan is inferred.
+   - `ToolInvocationResulted` – emitted by any tool worker after handling a `ToolInvocationRequested`.
+   - `PlanCompleted` – emitted by `orchestrator.ts` when all steps in the plan have succeeded.
+   - `PlanFailed` – emitted by `orchestrator.ts` when a step fails or placeholder resolution fails.
+   - `FinalAnswerSynthesized` – emitted by `synthesis-worker.ts` after building the final user answer.
 
 - **Tool requests (on `tool-invocation-requests`):**
-  - `ToolInvocationRequested` – emitted by `orchestrator.ts` when it wants a specific tool (e.g. `getWeather`, `calculateMath`, `getProductInformation`, `generalChat`) to run.
+   - `ToolInvocationRequested` – emitted by `orchestrator.ts` when it wants a specific tool (e.g. `getWeather`, `calculateMath`, `getProductInformation`, `generalChat`) to run.
 
 Any event that fails validation or that a component chooses not to process safely can be diverted to the **`dead-letter-queue`** topic.
 
@@ -317,7 +321,7 @@ The event flow is:
 2. Router consumes `UserQueryReceived`, infers a plan:
    - Step 1: `getExchangeRate`.
    - Step 2: `calculateMath` with a placeholder into step 1’s result.
-   It then emits `PlanGenerated` (topic: `conversation-events`).
+     It then emits `PlanGenerated` (topic: `conversation-events`).
 3. Orchestrator consumes `PlanGenerated`, initializes plan state, and emits a `ToolInvocationRequested` for step 1 (`getExchangeRate`) onto `tool-invocation-requests`.
 4. `exchange-rate-worker.ts` consumes this request, computes the rate, and emits `ToolInvocationResulted` with `{ rate: ... }` on `conversation-events`.
 5. Orchestrator updates state, resolves placeholders for step 2 using `{{steps.1.result.rate}}`, and emits another `ToolInvocationRequested` for `calculateMath`.
@@ -325,7 +329,7 @@ The event flow is:
 7. Orchestrator now sees all steps completed and emits `PlanCompleted` with a map of results for steps `1` and `2`.
 8. `aggregator.ts` consumes `PlanCompleted`, merges stored tool results, and emits `SynthesizeFinalAnswerRequested` on `user-commands`.
 9. `synthesis-worker.ts` consumes the synthesis request, builds `FinalAnswerSynthesized` with `payload.finalAnswer`, and emits it on `conversation-events`.
-10. CLI consumes `FinalAnswerSynthesized` and prints the answer for the user.
+10.   CLI consumes `FinalAnswerSynthesized` and prints the answer for the user.
 
 Each of these transitions is an **immutable event** on a Kafka topic, and the system’s behavior can be reconstructed by replaying them.
 

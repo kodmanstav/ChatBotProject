@@ -11,6 +11,9 @@ from pathlib import Path
 from datetime import datetime, timezone
 from kafka import KafkaConsumer, KafkaProducer
 
+import chromadb
+from chromadb.utils import embedding_functions
+
 logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
@@ -26,8 +29,9 @@ PROCESSED = set()
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PRODUCTS_DIR = PROJECT_ROOT / "data" / "products"
 
-# In-memory index of loaded product files
-PRODUCT_INDEX: list[dict] = []
+# Chroma persistence
+CHROMA_DIR = PROJECT_ROOT / ".chroma"
+CHROMA_COLLECTION = "products"
 
 
 def idempotency_key(conversation_id: str, step: int, tool: str) -> str:
@@ -42,21 +46,43 @@ def mark_processed(conversation_id: str, step: int, tool: str) -> None:
     PROCESSED.add(idempotency_key(conversation_id, step, tool))
 
 
-def load_product_index() -> None:
+# --- ChromaDB helpers --------------------------------------------------------
+
+
+def get_chroma_collection():
     """
-    Load all product text files from PRODUCTS_DIR into memory.
+    Create / load a persistent Chroma collection for products,
+    with a SentenceTransformer embedding function.
     """
-    global PRODUCT_INDEX
-    PRODUCT_INDEX = []
+    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+
+    client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+
+    embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2"
+    )
+
+    collection = client.get_or_create_collection(
+        name=CHROMA_COLLECTION,
+        embedding_function=embedding_fn,
+    )
+    return collection
+
+
+def load_product_files() -> list[dict]:
+    """
+    Read product .txt files and return a list of dicts with id, text, metadata.
+    """
+    products: list[dict] = []
 
     if not PRODUCTS_DIR.exists():
         logger.warning("[RAG Worker] Products directory not found: %s", PRODUCTS_DIR)
-        return
+        return products
 
     for path in sorted(PRODUCTS_DIR.glob("*.txt")):
         try:
             text = path.read_text(encoding="utf-8")
-        except Exception as e:  # pragma: no cover - defensive logging
+        except Exception as e:  # pragma: no cover
             logger.exception("[RAG Worker] Failed to read %s: %s", path, e)
             continue
 
@@ -66,62 +92,128 @@ def load_product_index() -> None:
                 title = line.split(":", 1)[1].strip()
                 break
 
-        PRODUCT_INDEX.append(
+        prod_id = path.stem
+
+        products.append(
             {
-                "filename": path.name,
-                "title": title or path.stem,
+                "id": prod_id,
                 "text": text,
+                "metadata": {
+                    "filename": path.name,
+                    "title": title or path.stem,
+                },
             }
         )
 
+    logger.info("[RAG Worker] Found %d product files in %s", len(products), PRODUCTS_DIR)
+    return products
+
+
+def index_products_if_needed(collection) -> None:
+    """
+    Index products into Chroma, skipping ones that already exist by id.
+    """
+    products = load_product_files()
+    if not products:
+        return
+
+    try:
+        existing = collection.get()
+        existing_ids = set(existing.get("ids", []))
+    except Exception as e:  # pragma: no cover
+        logger.warning("[RAG Worker] Failed to read existing Chroma IDs: %s", e)
+        existing_ids = set()
+
+    new_ids = []
+    new_texts = []
+    new_metadatas = []
+
+    for prod in products:
+        if prod["id"] in existing_ids:
+            continue
+        new_ids.append(prod["id"])
+        new_texts.append(prod["text"])
+        new_metadatas.append(prod["metadata"])
+
+    if not new_ids:
+        logger.info("[RAG Worker] No new products to index in Chroma.")
+        return
+
     logger.info(
-        "[RAG Worker] Loaded %d product files from %s",
-        len(PRODUCT_INDEX),
-        PRODUCTS_DIR,
+        "[RAG Worker] Indexing %d new products into Chroma collection '%s'",
+        len(new_ids),
+        CHROMA_COLLECTION,
     )
 
+    collection.add(ids=new_ids, documents=new_texts, metadatas=new_metadatas)
 
-def choose_best_product(query: str) -> dict | None:
+
+def retrieve_product_from_chroma(collection, query: str) -> dict | None:
     """
-    Very simple retrieval: choose the product whose title/filename/content
-    best matches the query using a naive keyword score.
+    Given a query string, return the best matching product from Chroma.
     """
-    if not PRODUCT_INDEX:
+    q = (query or "").strip()
+    if not q:
         return None
 
-    q = (query or "").lower().strip()
-    if not q:
-        return PRODUCT_INDEX[0]
+    try:
+        res = collection.query(query_texts=[q], n_results=1)
+    except Exception as e:  # pragma: no cover
+        logger.exception("[RAG Worker] Chroma query failed: %s", e)
+        return None
 
-    best = None
-    best_score = -1
+    ids = res.get("ids") or []
+    docs = res.get("documents") or []
+    metas = res.get("metadatas") or []
 
-    for item in PRODUCT_INDEX:
-        score = 0
-        title = (item.get("title") or "").lower()
-        filename = (item.get("filename") or "").lower()
-        text = (item.get("text") or "").lower()
+    if not ids or not ids[0]:
+        return None
 
-        # Direct matches on title or filename get higher weight
-        if title and title in q:
-            score += 5
-        if filename.replace(".txt", "") in q:
-            score += 4
+    text = docs[0][0] if docs and docs[0] else ""
+    meta = metas[0][0] if metas and metas[0] else {}
 
-        # Keyword overlap in content
-        for word in q.split():
-            if len(word) < 3:
-                continue
-            if word in title:
-                score += 2
-            if word in text:
-                score += 1
+    return {"text": text, "metadata": meta}
 
-        if score > best_score:
-            best_score = score
-            best = item
 
-    return best or PRODUCT_INDEX[0]
+def is_price_question(query: str) -> bool:
+    """
+    Heuristic check: is the user asking specifically about the price/cost?
+    Supports simple English + a bit of Hebrew.
+    """
+    q = (query or "").lower()
+    keywords = [
+        "price",
+        "how much",
+        "cost",
+        "כמה",
+        "מה המחיר",
+    ]
+    return any(kw in q for kw in keywords)
+
+
+def extract_price_line(text: str) -> str | None:
+    """
+    Given a product description text, try to extract the price line.
+    Assumes a structure like:
+
+    Price:
+    Starting at $1,499
+    """
+    lines = text.splitlines()
+    # Look for a "Price:" section, then take the first non-empty line after it
+    for i, line in enumerate(lines):
+        if line.strip().lower().startswith("price:"):
+            for j in range(i + 1, len(lines)):
+                candidate = lines[j].strip()
+                if candidate:
+                    return candidate
+
+    # Fallback: search for a line containing a dollar sign
+    for line in lines:
+        if "$" in line:
+            return line.strip()
+
+    return None
 
 
 def parse_message(value: bytes) -> dict | None:
@@ -141,20 +233,37 @@ def parse_message(value: bytes) -> dict | None:
         return None
 
 
-def simulate_retrieval(parameters: dict) -> dict:
+def simulate_retrieval(collection, parameters: dict) -> dict:
     """
-    Retrieve product information from local data/products/*.txt files.
+    Retrieve product information from ChromaDB using semantic search.
     """
     query = parameters.get("query") or parameters.get("q") or "product"
+    q_str = str(query)
 
-    product = choose_best_product(str(query))
-    if product is None:
+    hit = retrieve_product_from_chroma(collection, q_str)
+    if hit is None:
         retrieved = "No product data available."
+        meta: dict = {}
     else:
-        retrieved = product.get("text") or ""
+        full_text = hit.get("text") or ""
+        meta = hit.get("metadata") or {}
+
+        # If the user asks specifically for the price, try to return only the price line
+        if is_price_question(q_str):
+            price_line = extract_price_line(full_text)
+            if price_line:
+                retrieved = price_line
+                meta = {**meta, "answer_type": "price"}
+            else:
+                # Fallback: return full text if we couldn't safely extract a price
+                retrieved = full_text
+        else:
+            retrieved = full_text
 
     return {
         "retrieved_context": retrieved,
+        "metadata": meta,
+        "query": q_str,
     }
 
 
@@ -171,7 +280,9 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    load_product_index()
+    # Setup Chroma and index products once at startup
+    collection = get_chroma_collection()
+    index_products_if_needed(collection)
 
     logger.info("[RAG Worker] Consuming %s for tool %s", CONSUME_TOPIC, TOOL_NAME)
 
@@ -190,13 +301,19 @@ def main():
         parameters = payload.get("parameters") or {}
 
         if already_processed(conversation_id, step, TOOL_NAME):
-            logger.info("[RAG Worker] Skipping duplicate request %s step %s", conversation_id, step)
+            logger.info(
+                "[RAG Worker] Skipping duplicate request %s step %s",
+                conversation_id,
+                step,
+            )
             continue
 
-        logger.info("[RAG Worker] Received ToolInvocationRequested for %s", TOOL_NAME)
+        logger.info(
+            "[RAG Worker] Received ToolInvocationRequested for %s", TOOL_NAME
+        )
 
         try:
-            result = simulate_retrieval(parameters)
+            result = simulate_retrieval(collection, parameters)
             ts = datetime.now(timezone.utc).isoformat()
             out = {
                 "eventType": "ToolInvocationResulted",

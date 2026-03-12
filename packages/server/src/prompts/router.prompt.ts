@@ -95,7 +95,7 @@ User: how much is 100 USD in ILS?
       "step": 2,
       "tool": "calculateMath",
       "parameters": {
-        "expression": "100 * {{steps.1.rate}}"
+        "expression": "100 * {{steps.1.result.rate}}"
       }
     }
   ],

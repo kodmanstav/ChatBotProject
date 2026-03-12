@@ -567,6 +567,32 @@ async function main(): Promise<void> {
 
             plan = maybeUpgradePlan(userInput, plan);
 
+            // Normalize old placeholder style like {{steps.1.rate}} -> {{steps.1.result.rate}}
+            try {
+               plan = {
+                  ...plan,
+                  plan: plan.plan.map((step) => ({
+                     ...step,
+                     parameters: Object.fromEntries(
+                        Object.entries(step.parameters).map(([key, value]) => {
+                           if (typeof value === 'string') {
+                              return [
+                                 key,
+                                 value.replace(
+                                    /\{\{\s*steps\.(\d+)\.rate\s*\}\}/g,
+                                    '{{steps.$1.result.rate}}'
+                                 ),
+                              ];
+                           }
+                           return [key, value];
+                        })
+                     ),
+                  })),
+               };
+            } catch (e) {
+               logError('[Router] Failed to normalize placeholders', e);
+            }
+
             console.log(
                `[Router] Generated plan with ${plan.plan.length} step(s)`
             );
