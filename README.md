@@ -224,7 +224,15 @@ These cover planning, orchestration, math/weather/fx tools, LLM inference, aggre
 From `python-workers`:
 
 ```bash
-python install -r requirements.txt
+py -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
 python rag-retriever-worker.py
 ```
 
