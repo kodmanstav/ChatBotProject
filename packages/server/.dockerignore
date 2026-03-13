@@ -1,0 +1,8 @@
+node_modules
+.git
+.env
+execution-log.txt
+history.json
+dist
+coverage
+*.log

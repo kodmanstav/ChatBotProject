@@ -1,5 +1,4 @@
 kafka-python
 transformers
-torch
 chromadb
 sentence-transformers

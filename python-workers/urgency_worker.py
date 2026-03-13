@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-KAFKA_BOOTSTRAP = "localhost:9092"
+KAFKA_BOOTSTRAP = os.getenv("KAFKA_BROKERS", "localhost:9092")
 CONSUME_TOPIC = "sanitized-messages"
 CONSUMER_GROUP = "urgency-group"
 PRODUCE_TOPIC = "analysis-urgency"

@@ -7,6 +7,7 @@ simulates retrieval, publishes ToolInvocationResulted to conversation-events.
 import json
 import logging
 import sys
+import os
 from pathlib import Path
 from datetime import datetime, timezone
 from kafka import KafkaConsumer, KafkaProducer
@@ -17,7 +18,7 @@ from chromadb.utils import embedding_functions
 logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
-KAFKA_BOOTSTRAP = "localhost:9092"
+KAFKA_BOOTSTRAP = os.getenv("KAFKA_BROKERS", "localhost:9092")
 CONSUME_TOPIC = "tool-invocation-requests"
 CONSUMER_GROUP = "rag-retriever-group"
 PRODUCE_TOPIC = "conversation-events"
@@ -26,7 +27,7 @@ TOOL_NAME = "getProductInformation"
 PROCESSED = set()
 
 # Directory containing product data files (project-root/data/products)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path(__file__).resolve().parent.parent))
 PRODUCTS_DIR = PROJECT_ROOT / "data" / "products"
 
 # Chroma persistence

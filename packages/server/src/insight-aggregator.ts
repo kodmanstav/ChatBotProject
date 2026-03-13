@@ -3,7 +3,7 @@ import { safeJsonParse } from './utils/json';
 
 // --- Constants ---
 
-const KAFKA_BROKERS = ['localhost:9092'];
+const KAFKA_BROKERS = [process.env.KAFKA_BROKERS || 'localhost:9092'];
 const SENTIMENT_TOPIC = 'analysis-sentiment';
 const URGENCY_TOPIC = 'analysis-urgency';
 const CONSUMER_GROUP = 'insight-aggregator-group';
@@ -134,9 +134,7 @@ function tryMergeInsight(id: string): FullInsight | null {
 
 function handleBusinessLogic(full: FullInsight): void {
    if (full.sentiment === 'NEGATIVE' && full.urgency === 'Urgent') {
-      console.log(
-         `${RED_ANSI}ALERT: ANGRY CUSTOMER NEEDS HELP!${RESET_ANSI}`
-      );
+      console.log(`${RED_ANSI}ALERT: ANGRY CUSTOMER NEEDS HELP!${RESET_ANSI}`);
    }
    console.log(`[Aggregator] Full Insight: ${JSON.stringify(full)}`);
 }
