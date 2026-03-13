@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-const rootDir = typeof (import.meta as { dir?: string }).dir === 'string'
-   ? path.join((import.meta as { dir: string }).dir, '..')
-   : path.dirname(new URL(import.meta.url).pathname);
+const rootDir =
+   typeof (import.meta as { dir?: string }).dir === 'string'
+      ? path.join((import.meta as { dir: string }).dir, '..')
+      : path.dirname(new URL(import.meta.url).pathname);
 dotenv.config({ path: path.join(rootDir, '.env') });
 
 import { Kafka } from 'kafkajs';
@@ -18,7 +19,7 @@ import { safeJsonParse } from './utils/json';
 
 const RAW_TOPIC = 'raw-reviews-topic';
 const PROCESSED_TOPIC = 'processed-insights-topic';
-const BROKERS = ['localhost:9092'];
+const BROKERS = [process.env.KAFKA_BROKERS || 'localhost:9092'];
 
 const kafka = new Kafka({
    clientId: 'review-processor',
@@ -69,7 +70,9 @@ async function processMessage(rawValue: string): Promise<void> {
    }
 
    if (shouldSelfCorrect(analysis)) {
-      console.log(`[PROCESSOR] Self-correcting ${msg.reviewId} (score/sentiment mismatch)`);
+      console.log(
+         `[PROCESSOR] Self-correcting ${msg.reviewId} (score/sentiment mismatch)`
+      );
       analysis = await correctAnalysis(text, analysis);
    }
 
@@ -90,7 +93,9 @@ async function main() {
    await consumer.connect();
    await consumer.subscribe({ topic: RAW_TOPIC, fromBeginning: false });
 
-   console.log(`[PROCESSOR] Subscribed to ${RAW_TOPIC}, producing to ${PROCESSED_TOPIC}`);
+   console.log(
+      `[PROCESSOR] Subscribed to ${RAW_TOPIC}, producing to ${PROCESSED_TOPIC}`
+   );
 
    await consumer.run({
       eachMessage: async ({ topic, message }) => {

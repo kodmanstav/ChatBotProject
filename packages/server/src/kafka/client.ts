@@ -1,6 +1,6 @@
 import { Kafka } from 'kafkajs';
 
-const BROKERS = ['localhost:9092'];
+const BROKERS = [process.env.KAFKA_BROKERS || 'localhost:9092'];
 
 export const TOPICS = {
    USER_COMMANDS: 'user-commands',

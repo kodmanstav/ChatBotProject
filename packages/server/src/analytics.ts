@@ -12,13 +12,16 @@ import type { AspectInsight, ProcessedInsight } from './types';
 import { safeJsonParse } from './utils/json';
 
 const PROCESSED_TOPIC = 'processed-insights-topic';
-const BROKERS = ['localhost:9092'];
+const BROKERS = [process.env.KAFKA_BROKERS || 'localhost:9092'];
 const CONSUMER_GROUP_ID = 'analytics-consumer-group';
 
 const SENTIMENTS = ['Positive', 'Negative', 'Neutral'] as const;
 
 function isSentiment(s: unknown): s is (typeof SENTIMENTS)[number] {
-   return typeof s === 'string' && SENTIMENTS.includes(s as (typeof SENTIMENTS)[number]);
+   return (
+      typeof s === 'string' &&
+      SENTIMENTS.includes(s as (typeof SENTIMENTS)[number])
+   );
 }
 
 function isAspectInsight(obj: unknown): obj is AspectInsight {
@@ -113,9 +116,14 @@ async function main() {
          topic: PROCESSED_TOPIC,
          fromBeginning: false,
       });
-      console.log(`[ANALYTICS] Subscribed to ${PROCESSED_TOPIC}. Waiting for messages...\n`);
+      console.log(
+         `[ANALYTICS] Subscribed to ${PROCESSED_TOPIC}. Waiting for messages...\n`
+      );
    } catch (err) {
-      console.error('[ANALYTICS] Kafka connection failed:', (err as Error)?.message ?? err);
+      console.error(
+         '[ANALYTICS] Kafka connection failed:',
+         (err as Error)?.message ?? err
+      );
       process.exit(1);
    }
 
@@ -133,7 +141,9 @@ async function main() {
 
             const insight = validateProcessedInsight(parsed);
             if (!insight) {
-               console.error('[ANALYTICS] Invalid or missing fields, skipping message.');
+               console.error(
+                  '[ANALYTICS] Invalid or missing fields, skipping message.'
+               );
                return;
             }
 
@@ -152,7 +162,10 @@ async function main() {
             console.log(`Current Restaurant Rating: ${displayRating}/10`);
             console.log('---');
          } catch (err) {
-            console.error('[ANALYTICS] Error processing message:', (err as Error)?.message ?? err);
+            console.error(
+               '[ANALYTICS] Error processing message:',
+               (err as Error)?.message ?? err
+            );
          }
       },
    });

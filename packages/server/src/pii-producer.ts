@@ -9,7 +9,7 @@ const OLLAMA_MODEL = process.env.OLLAMA_PII_MODEL ?? 'llama3';
 const PII_SYSTEM_PROMPT =
    'You are a PII scrubber. Rewrite the input removing names and phone numbers. Output ONLY the scrubbed text.';
 
-const KAFKA_BROKERS = ['localhost:9092'];
+const KAFKA_BROKERS = [process.env.KAFKA_BROKERS || 'localhost:9092'];
 const TOPIC = 'sanitized-messages';
 
 // --- Types ---
@@ -58,9 +58,7 @@ async function scrubPII(text: string): Promise<string> {
    });
 
    if (!res.ok) {
-      throw new Error(
-         `Ollama request failed: ${res.status} ${res.statusText}`
-      );
+      throw new Error(`Ollama request failed: ${res.status} ${res.statusText}`);
    }
 
    let data: OllamaResponse;
@@ -94,10 +92,7 @@ async function publishSanitizedMessage(
 /**
  * Processes one line: scrub via Ollama, then publish to Kafka. Never publishes unsanitized text.
  */
-async function processLine(
-   line: string,
-   producer: Producer
-): Promise<void> {
+async function processLine(line: string, producer: Producer): Promise<void> {
    const trimmed = line.trim();
    if (!trimmed) return;
 
@@ -121,7 +116,10 @@ async function processLine(
    try {
       await publishSanitizedMessage(producer, payload);
    } catch (err) {
-      console.error('Kafka send error:', err instanceof Error ? err.message : err);
+      console.error(
+         'Kafka send error:',
+         err instanceof Error ? err.message : err
+      );
       console.error('Skipping publish (Kafka failed).');
       return;
    }

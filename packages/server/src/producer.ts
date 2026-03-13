@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Kafka } from 'kafkajs';
 
 const TOPIC = 'raw-reviews-topic';
-const BROKERS = ['localhost:9092'];
+const BROKERS = [process.env.KAFKA_BROKERS || 'localhost:9092'];
 
 const kafka = new Kafka({
    clientId: 'reviews-producer',
