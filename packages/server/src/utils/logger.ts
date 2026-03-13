@@ -4,7 +4,9 @@ import { resolve } from 'path';
 const PREFIX = '[EventAgent]';
 
 // Single shared execution log for all components
-const EXECUTION_LOG_PATH = resolve(__dirname, '..', '..', 'execution-log.txt');
+const EXECUTION_LOG_PATH =
+   process.env.EXECUTION_LOG_PATH ||
+   resolve(__dirname, '..', '..', 'execution-log.txt');
 
 export function logInfo(message: string, ...args: unknown[]): void {
    console.log(`${PREFIX} ${message}`, ...args);
