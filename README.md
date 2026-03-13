@@ -168,101 +168,165 @@ Each worker:
 ### 🧰 Prerequisites
 
 - 🐳 **Docker & Docker Compose**
-- ⚡ **Bun**
-- 🟢 **Node.js**
-- 🐍 **Python 3.10+**
+- ⚡ **Bun** (optional for local development)
+- 🟢 **Node.js** (optional for local development)
+- 🐍 **Python 3.10+** (optional for local development)
 
-Environment variables (`packages/server/.env`), for example:
+Configure Environment variables (`packages/server/.env`):
 
-- `KAFKA_BROKERS=localhost:9092`
+- `OPENAI_API_KEY=...` (required)
+- `KAFKA_BROKERS=localhost:9092` (optional for local development)
 - `OLLAMA_URL=http://localhost:11434/api/chat` (optional)
-- `OPENAI_API_KEY=...` (optional)
+
+When running inside Docker, services automatically use the internal Kafka address: `kafka:29092`
 
 ---
 
-### 🟡 1. Start Kafka
+### 1️⃣ Start the system
 
-From `packages/server`:
+Navigate to:
 
+```bash
+cd packages/server
+```
+
+Then start the entire system:
+
+First run:
+```bash
+docker compose up -d --build
+```
+After that, usually you only need:
 ```bash
 docker compose up -d
 ```
 
+This will start:
+- Zookeeper
+- Kafka
+- Kafka topic initialization
+- Router
+- Orchestrator
+- Math Worker
+- Weather Worker
+- Exchange Rate Worker
+- LLM Inference Worker
+- Aggregator
+- Synthesis Worker
+- Python RAG Worker
+
+All services run in the background.
+
 ---
 
-### 🧱 2. Install Node dependencies
-
-From `packages/server`:
+### 2️⃣ Check that services are running
 
 ```bash
-bun install
+docker compose ps
 ```
-
----
-
-### ⚙️ 3. Run Node services
-
-From `packages/server`, open **multiple terminals** and run:
-
+Example output:
 ```bash
-bun run router
-bun run orchestrator
-bun run math-worker
-bun run weather-worker
-bun run exchange-rate-worker
-bun run llm-inference-worker
-bun run aggregator
-bun run synthesis-worker
+NAME                     STATUS
+kafka                    Up
+router                   Up
+orchestrator             Up
+math-worker              Up
+weather-worker           Up
+exchange-rate-worker     Up
+llm-inference-worker     Up
+aggregator               Up
+synthesis-worker         Up
+rag-worker               Up
 ```
-
-These cover planning, orchestration, math/weather/fx tools, LLM inference, aggregation, and final synthesis.
-
 ---
 
-### 🐍 4. Install and run Python workers
+### 3️⃣ Viewing logs
 
-From `python-workers`:
+To watch logs from all services in real time:
 
+```docker compose logs -f```
+
+Example output:
 ```bash
-py -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
-
-pip install -r requirements.txt
-python rag-retriever-worker.py
+router-1           | Router received user query
+orchestrator-1     | PlanGenerated event received
+math-worker-1      | Calculating result
+weather-worker-1   | Fetching weather data
+rag-worker-1       | Running RAG retrieval
 ```
-
-This enables the `getProductInformation` / RAG flow for product questions.
+To inspect logs from a specific service, for example router:
+```docker compose logs -f router```
 
 ---
-
-### 💻 5. Launch the CLI
-
-From `packages/server`:
-
+### 4️⃣ Launch the CLI
+Once the system is running, in another terminal, start the CLI:
 ```bash
-bun run user-interface
+cd packages/server
+docker compose --profile cli run --rm user-interface
 ```
 
-You should see a prompt like:
+You should see:
+```You>```
 
-```text
-You>
-```
+The CLI:
+- Publishes ```UserQueryReceived```
+- Waits for ```FinalAnswerSynthesized```
+- Prints the final assistant response
 
-Type queries and press Enter. The CLI:
+## 🐳 Working with Docker
 
-- Publishes a `UserQueryReceived` command to the `user-commands` topic.
-- Waits on `conversation-events` for a `FinalAnswerSynthesized` event with the same `conversationId`.
-- Prints `Assistant: ...` when the final answer arrives.
+### Managing services
+
+Restart a service **(if you modify a service)**:
+
+```docker compose restart router```
+
+Stop a service:
+
+```docker compose stop router```
+
+Start it again:
+
+```docker compose start router```
 
 ---
 
-### 🧪 6. Example queries
+### Rebuilding services (when needed)
+
+A rebuild is **not required for every change.**
+
+Use rebuild only if you changed:
+
+- package.json
+- bun.lock
+- Dockerfile
+- requirements.txt
+
+Rebuild a specific service:
+```docker compose up -d --build router```
+
+Rebuild everything:
+```docker compose up -d --build```
+
+---
+
+### Stop the system
+
+To stop all services:
+```docker compose down```
+
+---
+
+### When changing docker-compose.yml
+
+To update changes:
+```bash
+docker compose down
+docker compose up -d
+```
+
+
+## 🧪 Example queries
 
 - **Orchestration (exchange conversion):**  
   `how much is 100 USD in ILS?`
@@ -273,7 +337,7 @@ Type queries and press Enter. The CLI:
 - **Weather advice:**  
   `I’m flying to London tomorrow, should I bring a coat?`
 
-### 📜 7. Inspecting the execution log
+## 📜 Inspecting the execution log
 
 High‑level execution traces are written to:
 
@@ -284,13 +348,6 @@ Each line looks like:
 ```text
 2026-03-11T12:12:16.825Z | router | conv=cb3104e4-0e7a-9905-ed9899da1128 | PlanGenerated | {"steps":2,"tools":["getExchangeRate","calculateMath"],"final_answer_synthesis_required":true}
 ```
-
-Use this file to demonstrate:
-
-- At least **3 orchestration scenarios** (math, exchange‑conversion, weather‑advice).
-- At least **2 RAG/product scenarios** (Smart Watch S5, Laptop Pro).
-- At least **1 resilience scenario** (kill and restart a component mid‑flow, then observe new conversations).
-
 ---
 
 ## Event Sourcing in This Project

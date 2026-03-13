@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -13,7 +11,7 @@ services:
       test: ["CMD", "nc", "-z", "localhost", "2181"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -27,13 +25,15 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
 
   kafka-init:
     image: confluentinc/cp-kafka:7.5.0
@@ -42,15 +42,192 @@ services:
       kafka:
         condition: service_healthy
     entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        echo "Waiting for Kafka to be ready..."
-        sleep 5
-        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic raw-reviews-topic --partitions 1 --replication-factor 1
-        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic processed-insights-topic --partitions 1 --replication-factor 1
-        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user-commands --partitions 1 --replication-factor 1
-        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic conversation-events --partitions 1 --replication-factor 1
-        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic tool-invocation-requests --partitions 1 --replication-factor 1
-        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic dead-letter-queue --partitions 1 --replication-factor 1
-        echo "Topics created."
+    command: |
+      echo "Waiting for Kafka to be ready..."
+      sleep 5
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic raw-reviews-topic --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic processed-insights-topic --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic user-commands --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic conversation-events --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic tool-invocation-requests --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic dead-letter-queue --partitions 1 --replication-factor 1
+      echo "Topics created."
     restart: "no"
+
+  router:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run router
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run orchestrator
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  math-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run math-worker
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  weather-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run weather-worker
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  exchange-rate-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run exchange-rate-worker
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  llm-inference-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run llm-inference-worker
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  aggregator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run aggregator
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  synthesis-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run synthesis-worker
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      EXECUTION_LOG_PATH: /app/execution-log.txt
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  rag-worker:
+    build:
+      context: ../../python-workers
+      dockerfile: Dockerfile
+    working_dir: /workspace/python-workers
+    command: python rag-retriever-worker.py
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      PROJECT_ROOT: /workspace
+      EXECUTION_LOG_PATH: /workspace/packages/server/execution-log.txt
+    volumes:
+      - ../..:/workspace
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  user-interface:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bun run user-interface
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    stdin_open: true
+    tty: true
+    profiles:
+      - cli
