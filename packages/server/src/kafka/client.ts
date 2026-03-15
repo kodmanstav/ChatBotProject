@@ -9,9 +9,17 @@ export const TOPICS = {
    DEAD_LETTER_QUEUE: 'dead-letter-queue',
 } as const;
 
-export function createKafkaClient(clientId: string): Kafka {
+export interface CreateKafkaClientOptions {
+   logLevel?: number;
+}
+
+export function createKafkaClient(
+   clientId: string,
+   options?: CreateKafkaClientOptions
+): Kafka {
    return new Kafka({
       clientId,
       brokers: BROKERS,
+      ...(options?.logLevel !== undefined && { logLevel: options.logLevel }),
    });
 }

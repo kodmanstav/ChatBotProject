@@ -1,17 +1,17 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumerMulti } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import * as stateStore from './services/state-store.service';
-import { resolveStepParameters } from './utils/placeholder-resolver';
-import type { PlanState, PlanStep } from './types/plan';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumerMulti } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import * as stateStore from '../services/state-store.service';
+import { resolveStepParameters } from '../utils/placeholder-resolver';
+import type { PlanState, PlanStep } from '../types/plan';
 import type {
    PlanGeneratedEvent,
    ToolInvocationResultedEvent,
    ToolInvocationRequestedEvent,
    PlanCompletedEvent,
    PlanFailedEvent,
-} from './types/events';
-import { logError, logExecution } from './utils/logger';
+} from '../types/events';
+import { logError, logExecution } from '../utils/logger';
 
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
 const TOOL_INVOCATION_REQUESTS_TOPIC = TOPICS.TOOL_INVOCATION_REQUESTS;
@@ -143,7 +143,9 @@ async function main(): Promise<void> {
       onMessage: async (payload, _raw, topic) => {
          if (topic === TOOL_INVOCATION_REQUESTS_TOPIC) {
             if (isToolInvocationRequested(payload)) {
-               const state = stateStore.getPlanState(payload.conversationId);
+               const state = await stateStore.getPlanState(
+                  payload.conversationId
+               );
                if (
                   state &&
                   !state.dispatchedSteps.includes(payload.payload.step)
@@ -152,7 +154,7 @@ async function main(): Promise<void> {
                      ...state.dispatchedSteps,
                      payload.payload.step,
                   ].sort((a, b) => a - b);
-                  stateStore.setPlanState(state);
+                  await stateStore.setPlanState(state);
                }
             }
             return;
@@ -169,7 +171,7 @@ async function main(): Promise<void> {
             if (!firstStep) return;
 
             const state = initPlanState(conversationId, plan);
-            stateStore.setPlanState(state);
+            await stateStore.setPlanState(state);
 
             console.log(
                `[Orchestrator] Initialized state for conversation ${conversationId}`
@@ -190,7 +192,7 @@ async function main(): Promise<void> {
                   firstStep.step,
                   'Placeholder resolution failed for first step'
                );
-               stateStore.deletePlanState(conversationId);
+               await stateStore.deletePlanState(conversationId);
                return;
             }
 
@@ -204,7 +206,7 @@ async function main(): Promise<void> {
             );
             if (ok) {
                state.dispatchedSteps = [firstStep.step];
-               stateStore.setPlanState(state);
+               await stateStore.setPlanState(state);
                console.log(
                   `[Orchestrator] Dispatching step ${firstStep.step} -> ${firstStep.tool}`
                );
@@ -223,7 +225,7 @@ async function main(): Promise<void> {
 
          if (isToolInvocationResulted(payload)) {
             const { conversationId, payload: pl } = payload;
-            const state = stateStore.getPlanState(conversationId);
+            const state = await stateStore.getPlanState(conversationId);
             if (!state) return;
 
             const stepNum =
@@ -252,21 +254,21 @@ async function main(): Promise<void> {
                   'Tool invocation failed'
                );
                state.status = 'FAILED';
-               stateStore.setPlanState(state);
-               stateStore.deletePlanState(conversationId);
+               await stateStore.setPlanState(state);
+               await stateStore.deletePlanState(conversationId);
                return;
             }
 
             const results = { ...state.results, [String(stepNum)]: pl.result };
             state.results = results;
             state.updatedAt = new Date().toISOString();
-            stateStore.setPlanState(state);
+            await stateStore.setPlanState(state);
 
             const completedCount = Object.keys(results).length;
 
             if (completedCount >= state.plan.length) {
                state.status = 'COMPLETED';
-               stateStore.setPlanState(state);
+               await stateStore.setPlanState(state);
                await publishPlanCompleted(producer, conversationId, results);
                console.log(
                   `[Orchestrator] Plan completed for conversation ${conversationId}`
@@ -274,7 +276,7 @@ async function main(): Promise<void> {
                logExecution('orchestrator', conversationId, 'PlanCompleted', {
                   steps: completedCount,
                });
-               stateStore.deletePlanState(conversationId);
+               await stateStore.deletePlanState(conversationId);
                return;
             }
 
@@ -282,12 +284,12 @@ async function main(): Promise<void> {
                (s) => !(String(s.step) in results)
             );
             if (!nextStep) {
-               stateStore.setPlanState(state);
+               await stateStore.setPlanState(state);
                return;
             }
 
             if (state.dispatchedSteps.includes(nextStep.step)) {
-               stateStore.setPlanState(state);
+               await stateStore.setPlanState(state);
                return;
             }
 
@@ -303,8 +305,8 @@ async function main(): Promise<void> {
                   'Placeholder resolution failed'
                );
                state.status = 'FAILED';
-               stateStore.setPlanState(state);
-               stateStore.deletePlanState(conversationId);
+               await stateStore.setPlanState(state);
+               await stateStore.deletePlanState(conversationId);
                return;
             }
 
@@ -327,7 +329,7 @@ async function main(): Promise<void> {
                   ...state.dispatchedSteps,
                   nextStep.step,
                ].sort((a, b) => a - b);
-               stateStore.setPlanState(state);
+               await stateStore.setPlanState(state);
                console.log(
                   `[Orchestrator] Dispatching step ${nextStep.step} -> ${nextStep.tool}`
                );

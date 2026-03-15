@@ -1,5 +1,5 @@
 import type { Kafka } from 'kafkajs';
-import { validateEvent } from '../schema/validator';
+import { validateEvent } from '../schemas/validator';
 import { TOPICS } from './client';
 import { logError } from '../utils/logger';
 

@@ -10,15 +10,15 @@
       "analytics": "bun run src/analytics.ts",
       "pii-producer": "bun run src/pii-producer.ts",
       "insight-aggregator": "bun run src/insight-aggregator.ts",
-      "user-interface": "bun run src/user-interface.ts",
-      "router": "bun run src/router.ts",
-      "orchestrator": "bun run src/orchestrator.ts",
-      "llm-inference-worker": "bun run src/llm-inference-worker.ts",
-      "math-worker": "bun run src/math-worker.ts",
-      "weather-worker": "bun run src/weather-worker.ts",
-      "exchange-rate-worker": "bun run src/exchange-rate-worker.ts",
-      "aggregator": "bun run src/aggregator.ts",
-      "synthesis-worker": "bun run src/synthesis-worker.ts"
+      "user-interface": "bun run src/node/user-interface.ts",
+      "router": "bun run src/node/router.ts",
+      "orchestrator": "bun run src/node/orchestrator.ts",
+      "llm-inference-worker": "bun run src/node/llm-inference-worker.ts",
+      "math-worker": "bun run src/node/math-worker.ts",
+      "weather-worker": "bun run src/node/weather-worker.ts",
+      "exchange-rate-worker": "bun run src/node/exchange-rate-worker.ts",
+      "aggregator": "bun run src/node/aggregator.ts",
+      "synthesis-worker": "bun run src/node/synthesis-worker.ts"
    },
    "devDependencies": {
       "@types/bun": "latest",
@@ -30,6 +30,7 @@
    },
    "dependencies": {
       "ajv": "^8.18.0",
+      "level": "^8.0.0",
       "cors": "^2.8.5",
       "dayjs": "^1.11.19",
       "dotenv": "^17.2.3",

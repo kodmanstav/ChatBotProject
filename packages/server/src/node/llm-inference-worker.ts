@@ -1,10 +1,10 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumer } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import { callOllamaWithFallback, callOpenAI } from './services/llm-client';
-import { RAG_GENERATION_PROMPT } from './prompts/rag-generation.prompt';
-import { ORCHESTRATION_SYNTHESIS_PROMPT } from './prompts/orchestration-synthesis.prompt';
-import { alreadyProcessed, markProcessed } from './utils/idempotency';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumer } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import { callOllamaWithFallback, callOpenAI } from '../services/llm-client';
+import { RAG_GENERATION_PROMPT } from '../prompts/rag-generation.prompt';
+import { ORCHESTRATION_SYNTHESIS_PROMPT } from '../prompts/orchestration-synthesis.prompt';
+import { alreadyProcessed, markProcessed } from '../utils/idempotency';
 
 const TOOL_INVOCATION_TOPIC = TOPICS.TOOL_INVOCATION_REQUESTS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;

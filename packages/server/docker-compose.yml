@@ -63,7 +63,7 @@ services:
    router:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run router
       env_file:
          - .env
@@ -80,7 +80,7 @@ services:
    orchestrator:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run orchestrator
       env_file:
          - .env
@@ -97,7 +97,7 @@ services:
    math-worker:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run math-worker
       env_file:
          - .env
@@ -114,7 +114,7 @@ services:
    weather-worker:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run weather-worker
       env_file:
          - .env
@@ -131,7 +131,7 @@ services:
    exchange-rate-worker:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run exchange-rate-worker
       env_file:
          - .env
@@ -148,7 +148,7 @@ services:
    llm-inference-worker:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run llm-inference-worker
       env_file:
          - .env
@@ -165,7 +165,7 @@ services:
    aggregator:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run aggregator
       env_file:
          - .env
@@ -182,7 +182,7 @@ services:
    synthesis-worker:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run synthesis-worker
       env_file:
          - .env
@@ -198,9 +198,9 @@ services:
 
    rag-worker:
       build:
-         context: ../../python-workers
+         context: ./src/python-workers
          dockerfile: Dockerfile
-      working_dir: /workspace/python-workers
+      working_dir: /app
       command: python rag-retriever-worker.py
       environment:
          KAFKA_BROKERS: kafka:29092
@@ -215,12 +215,15 @@ services:
    user-interface:
       build:
          context: .
-         dockerfile: Dockerfile
+         dockerfile: src/node/Dockerfile
       command: bun run user-interface
       env_file:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         PENDING_CONVERSATION_FILE: /app/cli-state/.pending-conversation.json
+      volumes:
+         - cli-state:/app/cli-state
       depends_on:
          kafka-init:
             condition: service_completed_successfully
@@ -228,3 +231,6 @@ services:
       tty: true
       profiles:
          - cli
+
+volumes:
+   cli-state: {}

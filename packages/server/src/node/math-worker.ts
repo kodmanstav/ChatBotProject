@@ -1,19 +1,12 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumer } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import { alreadyProcessed, markProcessed } from './utils/idempotency';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumer } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import { alreadyProcessed, markProcessed } from '../utils/idempotency';
 
 const TOOL_INVOCATION_TOPIC = TOPICS.TOOL_INVOCATION_REQUESTS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
-const CONSUMER_GROUP = 'exchange-rate-worker-group';
-const TOOL_NAME = 'getExchangeRate';
-
-const RATES: Record<string, Record<string, number>> = {
-   USD: { ILS: 3.7, EUR: 0.92, GBP: 0.79 },
-   EUR: { USD: 1.09, ILS: 4.02, GBP: 0.86 },
-   ILS: { USD: 0.27, EUR: 0.25, GBP: 0.21 },
-   GBP: { USD: 1.27, EUR: 1.16, ILS: 4.65 },
-};
+const CONSUMER_GROUP = 'math-worker-group';
+const TOOL_NAME = 'calculateMath';
 
 function isToolRequest(payload: unknown): payload is {
    eventType: 'ToolInvocationRequested';
@@ -29,15 +22,18 @@ function isToolRequest(payload: unknown): payload is {
    return (p as Record<string, unknown>).tool === TOOL_NAME;
 }
 
-function getRate(from: string, to: string): number | null {
-   const u = (from || '').toUpperCase().trim();
-   const v = (to || '').toUpperCase().trim();
-   if (!u || !v) return null;
-   return RATES[u]?.[v] ?? null;
+function calculate(expression: string): number | null {
+   const trimmed = String(expression).replace(/\s+/g, '').trim();
+   if (!/^[\d\s+\-*/().]+$/.test(trimmed)) return null;
+   try {
+      return Function(`"use strict"; return (${trimmed})`)() as number;
+   } catch {
+      return null;
+   }
 }
 
 async function main(): Promise<void> {
-   const kafka = createKafkaClient('exchange-rate-worker');
+   const kafka = createKafkaClient('math-worker');
    const producer = kafka.producer();
    await producer.connect();
 
@@ -49,28 +45,26 @@ async function main(): Promise<void> {
          const { conversationId, timestamp, payload: pl } = payload;
          const step = pl.step;
          const parameters = (pl.parameters as Record<string, unknown>) ?? {};
-         const from =
-            (parameters.from as string) ??
-            (parameters.source as string) ??
-            'USD';
-         const to =
-            (parameters.to as string) ?? (parameters.target as string) ?? 'ILS';
+         const expression =
+            (parameters.expression as string) ??
+            (parameters.expr as string) ??
+            '0';
 
          if (alreadyProcessed(conversationId, step, TOOL_NAME)) {
             console.log(
-               `[Exchange Worker] Skipping duplicate for ${conversationId} step ${step}`
+               `[Math Worker] Skipping duplicate for ${conversationId} step ${step}`
             );
             return;
          }
          console.log(
-            `[Exchange Worker] Processing getExchangeRate for ${conversationId}`
+            `[Math Worker] Processing calculateMath for ${conversationId}`
          );
 
-         const rate = getRate(from, to);
-         const success = rate !== null;
+         const value = calculate(expression);
+         const success = value !== null;
          const result = success
-            ? { from: from.toUpperCase(), to: to.toUpperCase(), rate }
-            : { from, to, error: 'Unsupported currency pair' };
+            ? { expression, value }
+            : { expression, error: 'Invalid or unsupported expression' };
          const out = {
             eventType: 'ToolInvocationResulted',
             conversationId,
@@ -88,13 +82,13 @@ async function main(): Promise<void> {
          });
          if (ok) {
             markProcessed(conversationId, step, TOOL_NAME);
-            console.log('[Exchange Worker] Published ToolInvocationResulted');
+            console.log('[Math Worker] Published ToolInvocationResulted');
          }
       },
    });
 }
 
 main().catch((err) => {
-   console.error('[Exchange Worker] Fatal:', err);
+   console.error('[Math Worker] Fatal:', err);
    process.exit(1);
 });

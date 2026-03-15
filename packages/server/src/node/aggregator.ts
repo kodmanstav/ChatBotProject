@@ -1,8 +1,8 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumerMulti } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import { logExecution } from './utils/logger';
-import type { SynthesizeFinalAnswerRequestedEvent } from './types/events';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumerMulti } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import { logExecution } from '../utils/logger';
+import type { SynthesizeFinalAnswerRequestedEvent } from '../types/events';
 
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
