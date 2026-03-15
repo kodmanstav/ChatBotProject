@@ -88,6 +88,7 @@ async function main(): Promise<void> {
          let finalAnswer: string;
          try {
             const text = JSON.stringify(planResults, null, 2);
+            console.log('[Synthesis] Using OpenAI');
             const openAiAnswer = await callOpenAI([
                { role: 'system', content: ORCHESTRATION_SYNTHESIS_PROMPT },
                {
