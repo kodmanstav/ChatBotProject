@@ -50,6 +50,13 @@ function getSchemasDir(): string {
       typeof (import.meta as { dir?: string }).dir === 'string'
          ? (import.meta as { dir: string }).dir
          : path.dirname(fileURLToPath(import.meta.url));
+   if (
+      existsSync(
+         path.join(scriptDir, 'user-commands', 'UserQueryReceived.schema.json')
+      )
+   ) {
+      return scriptDir;
+   }
    const fromModule = path.join(scriptDir, '..', '..', 'schemas');
    if (
       existsSync(
