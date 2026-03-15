@@ -5,6 +5,7 @@ import { parseJsonFences } from '../utils/json';
 
 const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://localhost:11434/api/chat';
 const OLLAMA_MODEL = process.env.OLLAMA_ROUTER_MODEL ?? 'llama3';
+const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 30_000;
 
 function getOpenAI(): OpenAI | null {
    const apiKey = process.env.OPENAI_API_KEY;
@@ -108,24 +109,31 @@ function normalizePlanPayload(raw: unknown): Plan | null {
 }
 
 async function callOllama(userInput: string): Promise<string> {
-   const res = await fetch(OLLAMA_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-         model: OLLAMA_MODEL,
-         stream: false,
-         messages: [
-            { role: 'system', content: ROUTER_SYSTEM_PROMPT.trim() },
-            { role: 'user', content: userInput },
-         ],
-      }),
-   });
-   if (!res.ok) throw new Error(`Ollama: ${res.status} ${res.statusText}`);
-   const data = (await res.json()) as { message?: { content?: string } };
-   const content = data.message?.content;
-   if (typeof content !== 'string')
-      throw new Error('Ollama: missing message.content');
-   return content.trim();
+   const controller = new AbortController();
+   const timeoutId = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
+   try {
+      const res = await fetch(OLLAMA_URL, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+            model: OLLAMA_MODEL,
+            stream: false,
+            messages: [
+               { role: 'system', content: ROUTER_SYSTEM_PROMPT.trim() },
+               { role: 'user', content: userInput },
+            ],
+         }),
+         signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`Ollama: ${res.status} ${res.statusText}`);
+      const data = (await res.json()) as { message?: { content?: string } };
+      const content = data.message?.content;
+      if (typeof content !== 'string')
+         throw new Error('Ollama: missing message.content');
+      return content.trim();
+   } finally {
+      clearTimeout(timeoutId);
+   }
 }
 
 async function callOpenAI(userInput: string): Promise<string> {
@@ -157,24 +165,33 @@ export async function generatePlan(userInput: string): Promise<Plan | null> {
    }
 
    let raw: string;
+   console.log('[LLM Router] Using Ollama for plan generation', {
+      url: OLLAMA_URL,
+      model: OLLAMA_MODEL,
+      timeoutMs: OLLAMA_TIMEOUT_MS,
+   });
    try {
       raw = await callOllama(userInput);
-      console.log('[LLM Router] Plan from Ollama');
+      console.log('[LLM Router] Plan from Ollama (success)');
    } catch (ollamaErr) {
+      const reason =
+         ollamaErr instanceof Error ? ollamaErr.message : String(ollamaErr);
+      console.warn(
+         '[LLM Router] Ollama failed, falling back to OpenAI:',
+         reason
+      );
       try {
          raw = await callOpenAI(userInput);
-         console.log('[LLM Router] Plan from OpenAI (fallback)');
+         console.log(
+            '[LLM Router] Plan from OpenAI (fallback; Ollama was unavailable)'
+         );
       } catch (openaiErr) {
          console.error('[LLM Router] Ollama failed:', ollamaErr);
-         console.error('[LLM Router] OpenAI fallback failed:', openaiErr);
+         console.error('[LLM Router] OpenAI fallback also failed:', openaiErr);
          return null;
       }
    }
    console.log('[LLM Router] Response length:', raw.length);
-   console.log(
-      '[LLM Router] Response preview:',
-      raw.slice(0, 200).replace(/\n/g, ' ')
-   );
    const parsed =
       parseJsonFences<unknown>(raw) ??
       (() => {

@@ -60,6 +60,16 @@ services:
          echo "Topics created."
       restart: 'no'
 
+   ollama:
+      image: ollama/ollama:latest
+      container_name: ollama
+      ports:
+         - '11434:11434'
+      volumes:
+         - ollama-models:/root/.ollama
+      restart: unless-stopped
+      # Pull a model on first run: docker compose exec ollama ollama pull llama3
+
    router:
       build:
          context: .
@@ -69,6 +79,9 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         OLLAMA_URL: http://ollama:11434/api/chat
+         OLLAMA_ROUTER_MODEL: ${OLLAMA_ROUTER_MODEL:-llama3}
+         OLLAMA_TIMEOUT_MS: ${OLLAMA_TIMEOUT_MS:-30000}
       volumes:
          - .:/app
          - /app/node_modules
@@ -154,6 +167,9 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         OLLAMA_URL: http://ollama:11434/api/chat
+         OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}
+         OLLAMA_TIMEOUT_MS: ${OLLAMA_TIMEOUT_MS:-30000}
       volumes:
          - .:/app
          - /app/node_modules
@@ -234,3 +250,4 @@ services:
 
 volumes:
    cli-state: {}
+   ollama-models: {}

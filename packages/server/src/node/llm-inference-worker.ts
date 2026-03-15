@@ -133,12 +133,12 @@ async function main(): Promise<void> {
 
          if (alreadyProcessed(conversationId, step, tool)) {
             console.log(
-               `[LLM Worker] Skipping duplicate ${tool} for ${conversationId} step ${step}`
+               `[LLM Worker] Skipping duplicate conversationId=${conversationId} step=${step} tool=${tool}`
             );
             return;
          }
          console.log(
-            `[LLM Worker] Processing ${tool} for conversation ${conversationId}`
+            `[LLM Worker] Received ToolInvocationRequested conversationId=${conversationId} step=${step} tool=${tool}`
          );
 
          let text: string;
@@ -169,6 +169,9 @@ async function main(): Promise<void> {
                value: out,
             });
             markProcessed(conversationId, step, tool);
+            console.log(
+               `[LLM Worker] Published ToolInvocationResulted (failed) conversationId=${conversationId} step=${step} tool=${tool} error=${msg}`
+            );
             return;
          }
 
@@ -187,7 +190,9 @@ async function main(): Promise<void> {
          });
          if (ok) {
             markProcessed(conversationId, step, tool);
-            console.log('[LLM Worker] Published ToolInvocationResulted');
+            console.log(
+               `[LLM Worker] Published ToolInvocationResulted conversationId=${conversationId} step=${step} tool=${tool}`
+            );
          }
       },
    });

@@ -91,12 +91,12 @@ async function main(): Promise<void> {
 
          if (alreadyProcessed(conversationId, step, TOOL_NAME)) {
             console.log(
-               `[Weather Worker] Skipping duplicate for ${conversationId} step ${step}`
+               `[Weather Worker] Skipping duplicate conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
             );
             return;
          }
          console.log(
-            `[Weather Worker] Processing getWeather for ${conversationId}`
+            `[Weather Worker] Received ToolInvocationRequested conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
          );
 
          const result = await getWeather(location);
@@ -117,7 +117,9 @@ async function main(): Promise<void> {
          });
          if (ok) {
             markProcessed(conversationId, step, TOOL_NAME);
-            console.log('[Weather Worker] Published ToolInvocationResulted');
+            console.log(
+               `[Weather Worker] Published ToolInvocationResulted conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
+            );
          }
       },
    });

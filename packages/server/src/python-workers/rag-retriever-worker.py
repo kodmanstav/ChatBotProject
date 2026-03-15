@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timezone
 from kafka import KafkaConsumer, KafkaProducer
+from kafka.structs import OffsetAndMetadata, TopicPartition
 
 import chromadb
 from chromadb.utils import embedding_functions
@@ -273,7 +274,8 @@ def main():
         CONSUME_TOPIC,
         bootstrap_servers=KAFKA_BOOTSTRAP,
         group_id=CONSUMER_GROUP,
-        auto_offset_reset="latest",
+        auto_offset_reset="earliest",
+        enable_auto_commit=False,
         value_deserializer=lambda v: v,
     )
     producer = KafkaProducer(
@@ -303,14 +305,18 @@ def main():
 
         if already_processed(conversation_id, step, TOOL_NAME):
             logger.info(
-                "[RAG Worker] Skipping duplicate request %s step %s",
+                "[RAG Worker] Skipping duplicate conversationId=%s step=%s tool=%s",
                 conversation_id,
                 step,
+                TOOL_NAME,
             )
             continue
 
         logger.info(
-            "[RAG Worker] Received ToolInvocationRequested for %s", TOOL_NAME
+            "[RAG Worker] Received ToolInvocationRequested conversationId=%s step=%s tool=%s",
+            conversation_id,
+            step,
+            TOOL_NAME,
         )
 
         try:
@@ -330,7 +336,14 @@ def main():
             producer.send(PRODUCE_TOPIC, value=out)
             producer.flush()
             mark_processed(conversation_id, step, TOOL_NAME)
-            logger.info("[RAG Worker] Published ToolInvocationResulted")
+            logger.info(
+                "[RAG Worker] Published ToolInvocationResulted conversationId=%s step=%s tool=%s",
+                conversation_id,
+                step,
+                TOOL_NAME,
+            )
+            tp = TopicPartition(CONSUME_TOPIC, message.partition)
+            consumer.commit(offsets={tp: OffsetAndMetadata(message.offset + 1, "")})
         except Exception as e:
             logger.exception("[RAG Worker] Error: %s", e)
             ts = datetime.now(timezone.utc).isoformat()
@@ -352,6 +365,15 @@ def main():
                 pass
             producer.flush()
             mark_processed(conversation_id, step, TOOL_NAME)
+            logger.info(
+                "[RAG Worker] Published ToolInvocationResulted (failed) conversationId=%s step=%s tool=%s error=%s",
+                conversation_id,
+                step,
+                TOOL_NAME,
+                str(e),
+            )
+            tp = TopicPartition(CONSUME_TOPIC, message.partition)
+            consumer.commit(offsets={tp: OffsetAndMetadata(message.offset + 1, "")})
 
 
 if __name__ == "__main__":
