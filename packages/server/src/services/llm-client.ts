@@ -14,6 +14,7 @@ export interface ChatMessage {
 }
 
 export async function callOllama(messages: ChatMessage[]): Promise<string> {
+   console.log('[LLM] Using Ollama');
    const res = await fetch(OLLAMA_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -32,6 +33,7 @@ export async function callOllama(messages: ChatMessage[]): Promise<string> {
 }
 
 export async function callOpenAI(messages: ChatMessage[]): Promise<string> {
+   console.log('[LLM] Using OpenAI');
    const openai = getOpenAI();
    if (!openai) throw new Error('OPENAI_API_KEY not set');
    const resp = await openai.chat.completions.create({

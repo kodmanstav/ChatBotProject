@@ -159,9 +159,11 @@ export async function generatePlan(userInput: string): Promise<Plan | null> {
    let raw: string;
    try {
       raw = await callOllama(userInput);
+      console.log('[LLM Router] Plan from Ollama');
    } catch (ollamaErr) {
       try {
          raw = await callOpenAI(userInput);
+         console.log('[LLM Router] Plan from OpenAI (fallback)');
       } catch (openaiErr) {
          console.error('[LLM Router] Ollama failed:', ollamaErr);
          console.error('[LLM Router] OpenAI fallback failed:', openaiErr);
