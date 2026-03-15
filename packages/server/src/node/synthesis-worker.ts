@@ -1,9 +1,9 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumer } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import { callOpenAI } from './services/llm-client';
-import { ORCHESTRATION_SYNTHESIS_PROMPT } from './prompts/orchestration-synthesis.prompt';
-import { logExecution } from './utils/logger';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumer } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import { callOpenAI } from '../services/llm-client';
+import { ORCHESTRATION_SYNTHESIS_PROMPT } from '../prompts/orchestration-synthesis.prompt';
+import { logExecution } from '../utils/logger';
 
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;

@@ -9,12 +9,12 @@ import {
 } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { logLevel } from 'kafkajs';
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { publishValidated } from './kafka/producer';
-import { runConsumer } from './kafka/consumer';
-import type { UserQueryReceivedEvent } from './types/events';
-import { logInfo, logError } from './utils/logger';
-import { safeJsonParse } from './utils/json';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { publishValidated } from '../kafka/producer';
+import { runConsumer } from '../kafka/consumer';
+import type { UserQueryReceivedEvent } from '../types/events';
+import { logInfo, logError } from '../utils/logger';
+import { safeJsonParse } from '../utils/json';
 
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;

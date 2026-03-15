@@ -1,17 +1,17 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumerMulti } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import * as stateStore from './services/state-store.service';
-import { resolveStepParameters } from './utils/placeholder-resolver';
-import type { PlanState, PlanStep } from './types/plan';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumerMulti } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import * as stateStore from '../services/state-store.service';
+import { resolveStepParameters } from '../utils/placeholder-resolver';
+import type { PlanState, PlanStep } from '../types/plan';
 import type {
    PlanGeneratedEvent,
    ToolInvocationResultedEvent,
    ToolInvocationRequestedEvent,
    PlanCompletedEvent,
    PlanFailedEvent,
-} from './types/events';
-import { logError, logExecution } from './utils/logger';
+} from '../types/events';
+import { logError, logExecution } from '../utils/logger';
 
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
 const TOOL_INVOCATION_REQUESTS_TOPIC = TOPICS.TOOL_INVOCATION_REQUESTS;

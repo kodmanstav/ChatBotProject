@@ -1,9 +1,9 @@
-import { createKafkaClient, TOPICS } from './kafka/client';
-import { runConsumer } from './kafka/consumer';
-import { publishValidated } from './kafka/producer';
-import { generatePlan } from './services/llm-router.service';
-import { logError, logExecution } from './utils/logger';
-import type { PlanGeneratedEvent } from './types/events';
+import { createKafkaClient, TOPICS } from '../kafka/client';
+import { runConsumer } from '../kafka/consumer';
+import { publishValidated } from '../kafka/producer';
+import { generatePlan } from '../services/llm-router.service';
+import { logError, logExecution } from '../utils/logger';
+import type { PlanGeneratedEvent } from '../types/events';
 
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
