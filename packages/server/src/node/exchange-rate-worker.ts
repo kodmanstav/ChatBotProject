@@ -58,12 +58,12 @@ async function main(): Promise<void> {
 
          if (alreadyProcessed(conversationId, step, TOOL_NAME)) {
             console.log(
-               `[Exchange Worker] Skipping duplicate for ${conversationId} step ${step}`
+               `[Exchange Worker] Skipping duplicate conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
             );
             return;
          }
          console.log(
-            `[Exchange Worker] Processing getExchangeRate for ${conversationId}`
+            `[Exchange Worker] Received ToolInvocationRequested conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
          );
 
          const rate = getRate(from, to);
@@ -88,7 +88,9 @@ async function main(): Promise<void> {
          });
          if (ok) {
             markProcessed(conversationId, step, TOOL_NAME);
-            console.log('[Exchange Worker] Published ToolInvocationResulted');
+            console.log(
+               `[Exchange Worker] Published ToolInvocationResulted conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
+            );
          }
       },
    });

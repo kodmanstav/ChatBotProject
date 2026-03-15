@@ -137,6 +137,10 @@ async function main(): Promise<void> {
    const producer = kafka.producer();
    await producer.connect();
 
+   console.log(
+      '[Orchestrator] Started. State store ready. Consuming conversation-events and tool-invocation-requests. Persisted plan state (if any) will be used when events arrive.'
+   );
+
    await runConsumerMulti(kafka, {
       topics: [CONVERSATION_EVENTS_TOPIC, TOOL_INVOCATION_REQUESTS_TOPIC],
       groupId: CONSUMER_GROUP,
@@ -211,6 +215,9 @@ async function main(): Promise<void> {
                   `[Orchestrator] Dispatching step ${firstStep.step} -> ${firstStep.tool}`
                );
                console.log(
+                  `[Orchestrator] Dispatched step ${firstStep.step} (${firstStep.tool}). Plan has ${plan.length} steps. Waiting for ToolInvocationResulted (completed: 0/${plan.length}).`
+               );
+               console.log(
                   '[Orchestrator] Resolved parameters:',
                   JSON.stringify(resolved, null, 2)
                );
@@ -232,6 +239,10 @@ async function main(): Promise<void> {
                pl.step ?? state.plan.find((s) => s.tool === pl.tool)?.step;
             if (stepNum == null) return;
 
+            const completedSoFar = Object.keys(state.results).length;
+            console.log(
+               `[Orchestrator] Applying result to plan state for conversation ${conversationId} (step ${stepNum}, completed so far: ${completedSoFar}/${state.plan.length}).`
+            );
             console.log(
                `[Orchestrator] Received ToolInvocationResulted for step ${stepNum}`
             );
@@ -265,6 +276,9 @@ async function main(): Promise<void> {
             await stateStore.setPlanState(state);
 
             const completedCount = Object.keys(results).length;
+            console.log(
+               `[Orchestrator] Plan resuming: received result for step ${stepNum} (${pl.tool}) (completed: ${completedCount}/${state.plan.length}).`
+            );
 
             if (completedCount >= state.plan.length) {
                state.status = 'COMPLETED';
@@ -332,6 +346,9 @@ async function main(): Promise<void> {
                await stateStore.setPlanState(state);
                console.log(
                   `[Orchestrator] Dispatching step ${nextStep.step} -> ${nextStep.tool}`
+               );
+               console.log(
+                  `[Orchestrator] Dispatched step ${nextStep.step} (${nextStep.tool}). Waiting for ToolInvocationResulted (completed: ${completedCount}/${state.plan.length}).`
                );
                logExecution('orchestrator', conversationId, 'StepDispatched', {
                   step: nextStep.step,

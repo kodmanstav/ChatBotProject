@@ -174,11 +174,14 @@ Each worker:
 
 Configure Environment variables (`packages/server/.env`):
 
-- `OPENAI_API_KEY=...` (required)
-- `KAFKA_BROKERS=localhost:9092` (optional for local development)
-- `OLLAMA_URL=http://localhost:11434/api/chat` (optional)
+- `OPENAI_API_KEY=...` (**required** for OpenAI; used as fallback when Ollama is unavailable)
+- `KAFKA_BROKERS=localhost:9092` (optional when running **outside** Docker)
+- `OLLAMA_URL=http://localhost:11434/api/chat` (optional when running **outside** Docker)
+- `OLLAMA_MODEL=llama3` (optional; default `llama3` for LLM inference worker)
+- `OLLAMA_ROUTER_MODEL=llama3` (optional; default `llama3` for plan generation)
+- `OLLAMA_TIMEOUT_MS=30000` (optional; default **30 seconds**). Timeout for Ollama requests; after this, the app falls back to OpenAI. Increase this in `.env` or Docker if your model is slow (e.g. `60000` for 1 minute).
 
-When running inside Docker, services automatically use the internal Kafka address: `kafka:29092`
+When running inside Docker, the stack includes an **Ollama** service. The Router and LLM Inference Worker get `OLLAMA_URL=http://ollama:11434/api/chat` automatically. Kafka is used as `kafka:29092`.
 
 ---
 
@@ -205,6 +208,7 @@ This will start:
 - Zookeeper
 - Kafka
 - Kafka topic initialization
+- **Ollama** (local LLM; used by Router and LLM Inference Worker with OpenAI fallback)
 - Router
 - Orchestrator
 - Math Worker
@@ -217,6 +221,14 @@ This will start:
 
 All services run in the background.
 
+**First-time Ollama setup:** After the stack is up, pull a model once so that Ollama can serve requests (otherwise the app falls back to OpenAI):
+
+```bash
+docker compose exec ollama ollama pull llama3
+```
+
+If Ollama is slow or does not respond in time, requests fall back to OpenAI after 30 seconds (configurable via `OLLAMA_TIMEOUT_MS`; e.g. set to `60000` in `.env` for 1 minute).
+
 ---
 
 ### 2️⃣ Check that services are running
@@ -228,6 +240,7 @@ Example output:
 ```bash
 NAME                     STATUS
 kafka                    Up
+ollama                   Up
 router                   Up
 orchestrator             Up
 math-worker              Up

@@ -52,12 +52,12 @@ async function main(): Promise<void> {
 
          if (alreadyProcessed(conversationId, step, TOOL_NAME)) {
             console.log(
-               `[Math Worker] Skipping duplicate for ${conversationId} step ${step}`
+               `[Math Worker] Skipping duplicate conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
             );
             return;
          }
          console.log(
-            `[Math Worker] Processing calculateMath for ${conversationId}`
+            `[Math Worker] Received ToolInvocationRequested conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
          );
 
          const value = calculate(expression);
@@ -82,7 +82,9 @@ async function main(): Promise<void> {
          });
          if (ok) {
             markProcessed(conversationId, step, TOOL_NAME);
-            console.log('[Math Worker] Published ToolInvocationResulted');
+            console.log(
+               `[Math Worker] Published ToolInvocationResulted conversationId=${conversationId} step=${step} tool=${TOOL_NAME}`
+            );
          }
       },
    });
