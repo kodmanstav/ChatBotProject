@@ -221,6 +221,9 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         PENDING_CONVERSATION_FILE: /app/cli-state/.pending-conversation.json
+      volumes:
+         - cli-state:/app/cli-state
       depends_on:
          kafka-init:
             condition: service_completed_successfully
@@ -228,3 +231,6 @@ services:
       tty: true
       profiles:
          - cli
+
+volumes:
+   cli-state: {}
