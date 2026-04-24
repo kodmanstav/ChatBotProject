@@ -16,8 +16,18 @@ from kafka.structs import OffsetAndMetadata, TopicPartition
 import chromadb
 from chromadb.utils import embedding_functions
 
-logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+logging.getLogger().handlers.clear()
+logging.getLogger().setLevel(logging.CRITICAL)
+
 logger = logging.getLogger(__name__)
+logger.handlers.clear()
+logger.setLevel(logging.INFO)
+logger.propagate = False
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter("%(message)s"))
+logger.addHandler(handler)
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BROKERS", "localhost:9092")
 CONSUME_TOPIC = "tool-invocation-requests"
@@ -46,6 +56,17 @@ def already_processed(conversation_id: str, step: int, tool: str) -> bool:
 
 def mark_processed(conversation_id: str, step: int, tool: str) -> None:
     PROCESSED.add(idempotency_key(conversation_id, step, tool))
+
+
+def build_offset_metadata(offset: int) -> OffsetAndMetadata:
+    """
+    Build OffsetAndMetadata across kafka-python versions.
+    Newer versions require leader_epoch as a 3rd argument.
+    """
+    try:
+        return OffsetAndMetadata(offset, "", -1)
+    except TypeError:
+        return OffsetAndMetadata(offset, "")
 
 
 # --- ChromaDB helpers --------------------------------------------------------
@@ -177,6 +198,47 @@ def retrieve_product_from_chroma(collection, query: str) -> dict | None:
     return {"text": text, "metadata": meta}
 
 
+def retrieve_product_from_files(query: str) -> dict | None:
+    """
+    Fallback retrieval without embeddings startup.
+    Scores local product files by keyword overlap.
+    """
+    products = load_product_files()
+    if not products:
+        return None
+
+    q = (query or "").lower()
+    tokens = [t for t in q.replace("-", " ").split() if len(t) > 2]
+    best = None
+    best_score = -1
+
+    for item in products:
+        text = (item.get("text") or "").lower()
+        title = str((item.get("metadata") or {}).get("title") or "").lower()
+        score = 0
+
+        for token in tokens:
+            if token in title:
+                score += 3
+            if token in text:
+                score += 1
+
+        if not tokens:
+            score = 1
+
+        if score > best_score:
+            best_score = score
+            best = item
+
+    if best is None:
+        return None
+
+    return {
+        "text": best.get("text") or "",
+        "metadata": {**(best.get("metadata") or {}), "source": "local-files-fallback"},
+    }
+
+
 def is_price_question(query: str) -> bool:
     """
     Heuristic check: is the user asking specifically about the price/cost?
@@ -242,7 +304,11 @@ def simulate_retrieval(collection, parameters: dict) -> dict:
     query = parameters.get("query") or parameters.get("q") or "product"
     q_str = str(query)
 
-    hit = retrieve_product_from_chroma(collection, q_str)
+    hit = None
+    if collection is not None:
+        hit = retrieve_product_from_chroma(collection, q_str)
+    if hit is None:
+        hit = retrieve_product_from_files(q_str)
     if hit is None:
         retrieved = "No product data available."
         meta: dict = {}
@@ -283,9 +349,8 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    # Setup Chroma and index products once at startup
-    collection = get_chroma_collection()
-    index_products_if_needed(collection)
+    # Keep startup fast and non-blocking; use local fallback retrieval immediately.
+    collection = None
 
     logger.info("[RAG Worker] Consuming %s for tool %s", CONSUME_TOPIC, TOOL_NAME)
 
@@ -343,7 +408,7 @@ def main():
                 TOOL_NAME,
             )
             tp = TopicPartition(CONSUME_TOPIC, message.partition)
-            consumer.commit(offsets={tp: OffsetAndMetadata(message.offset + 1, "")})
+            consumer.commit(offsets={tp: build_offset_metadata(message.offset + 1)})
         except Exception as e:
             logger.exception("[RAG Worker] Error: %s", e)
             ts = datetime.now(timezone.utc).isoformat()
@@ -373,7 +438,7 @@ def main():
                 str(e),
             )
             tp = TopicPartition(CONSUME_TOPIC, message.partition)
-            consumer.commit(offsets={tp: OffsetAndMetadata(message.offset + 1, "")})
+            consumer.commit(offsets={tp: build_offset_metadata(message.offset + 1)})
 
 
 if __name__ == "__main__":

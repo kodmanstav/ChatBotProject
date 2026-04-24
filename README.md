@@ -259,6 +259,18 @@ To watch logs from all services in real time:
 
 ```docker compose logs -f```
 
+To watch logs from all running services except infrastructure noise (`kafka`, `zookeeper`, `ollama`):
+
+```powershell
+docker compose logs -f $(docker compose ps --services | Where-Object { $_ -notin @('kafka','zookeeper','ollama') })
+```
+
+If you also want to exclude `kafka-init`:
+
+```powershell
+docker compose logs -f $(docker compose ps --services | Where-Object { $_ -notin @('kafka','zookeeper','ollama','kafka-init') })
+```
+
 Example output:
 ```bash
 router-1           | Router received user query
