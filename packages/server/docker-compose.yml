@@ -30,13 +30,7 @@ services:
          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       healthcheck:
-         test:
-            [
-               'CMD',
-               'kafka-broker-api-versions',
-               '--bootstrap-server',
-               'localhost:9092',
-            ]
+         test: ['CMD-SHELL', 'kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1']
          interval: 10s
          timeout: 10s
          retries: 10
@@ -50,7 +44,10 @@ services:
       entrypoint: ['/bin/sh', '-c']
       command: |
          echo "Waiting for Kafka to be ready..."
-         sleep 5
+         until kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1; do
+           echo "Kafka metadata not ready yet, retrying..."
+           sleep 2
+         done
          kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic raw-reviews-topic --partitions 1 --replication-factor 1
          kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic processed-insights-topic --partitions 1 --replication-factor 1
          kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic user-commands --partitions 1 --replication-factor 1

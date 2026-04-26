@@ -25,6 +25,86 @@ const DEFAULT_CONSUMER_CONFIG: Omit<ConsumerConfig, 'groupId'> = {
    rebalanceTimeout: Number(process.env.KAFKA_REBALANCE_TIMEOUT_MS) || 60_000,
 };
 
+const CONSUMER_START_MAX_RETRIES = Math.max(
+   1,
+   Number(process.env.KAFKA_CONSUMER_START_MAX_RETRIES) || 20
+);
+const CONSUMER_START_INITIAL_BACKOFF_MS = Math.max(
+   100,
+   Number(process.env.KAFKA_CONSUMER_START_INITIAL_BACKOFF_MS) || 1_000
+);
+const CONSUMER_START_MAX_BACKOFF_MS = Math.max(
+   CONSUMER_START_INITIAL_BACKOFF_MS,
+   Number(process.env.KAFKA_CONSUMER_START_MAX_BACKOFF_MS) || 10_000
+);
+
+function sleep(ms: number): Promise<void> {
+   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getErrorMessage(err: unknown): string {
+   if (err instanceof Error) return err.message;
+   return String(err);
+}
+
+function shouldRetryConsumerStart(err: unknown): boolean {
+   if (
+      err &&
+      typeof err === 'object' &&
+      'retriable' in err &&
+      (err as { retriable?: unknown }).retriable === true
+   ) {
+      return true;
+   }
+
+   const message = getErrorMessage(err).toLowerCase();
+   return (
+      message.includes('group coordinator is not available') ||
+      message.includes('unknown topic or partition') ||
+      message.includes('coordinator load in progress')
+   );
+}
+
+async function connectSubscribeAndRun(
+   consumer: ReturnType<Kafka['consumer']>,
+   subscribe: () => Promise<void>,
+   run: () => Promise<void>,
+   groupId: string,
+   topicsLabel: string
+): Promise<void> {
+   let attempt = 1;
+   let backoffMs = CONSUMER_START_INITIAL_BACKOFF_MS;
+
+   while (true) {
+      try {
+         await consumer.connect();
+         await subscribe();
+         await run();
+         return;
+      } catch (err) {
+         const canRetry =
+            attempt < CONSUMER_START_MAX_RETRIES &&
+            shouldRetryConsumerStart(err);
+         if (!canRetry) throw err;
+
+         console.warn(
+            `[Kafka consumer] Retry ${attempt}/${CONSUMER_START_MAX_RETRIES} for group=${groupId} topics=${topicsLabel}: ${getErrorMessage(
+               err
+            )}. Waiting ${backoffMs}ms before retry.`
+         );
+
+         try {
+            await consumer.disconnect();
+         } catch {
+            // Ignore disconnect errors between retries.
+         }
+         await sleep(backoffMs);
+         backoffMs = Math.min(backoffMs * 2, CONSUMER_START_MAX_BACKOFF_MS);
+         attempt += 1;
+      }
+   }
+}
+
 /**
  * Subscribe to multiple topics and run the consumer.
  */
@@ -37,21 +117,27 @@ export async function runConsumerMulti(
       ...DEFAULT_CONSUMER_CONFIG,
       ...(options.consumerConfig ?? {}),
    });
-   await consumer.connect();
-   await consumer.subscribe({ topics: options.topics, fromBeginning: false });
-   await consumer.run({
-      eachMessage: async ({ topic, message }) => {
-         const raw = message.value?.toString();
-         if (!raw) return;
-         const payload = safeJsonParse<unknown>(raw);
-         if (payload == null) return;
-         try {
-            await Promise.resolve(options.onMessage(payload, raw, topic));
-         } catch (err) {
-            console.error('[Kafka consumer] Handler error:', err);
-         }
-      },
-   });
+   await connectSubscribeAndRun(
+      consumer,
+      async () =>
+         consumer.subscribe({ topics: options.topics, fromBeginning: false }),
+      async () =>
+         consumer.run({
+            eachMessage: async ({ topic, message }) => {
+               const raw = message.value?.toString();
+               if (!raw) return;
+               const payload = safeJsonParse<unknown>(raw);
+               if (payload == null) return;
+               try {
+                  await Promise.resolve(options.onMessage(payload, raw, topic));
+               } catch (err) {
+                  console.error('[Kafka consumer] Handler error:', err);
+               }
+            },
+         }),
+      options.groupId,
+      options.topics.join(',')
+   );
 }
 
 /**
@@ -67,19 +153,25 @@ export async function runConsumer(
       ...DEFAULT_CONSUMER_CONFIG,
       ...(options.consumerConfig ?? {}),
    });
-   await consumer.connect();
-   await consumer.subscribe({ topic: options.topic, fromBeginning: false });
-   await consumer.run({
-      eachMessage: async ({ message }) => {
-         const raw = message.value?.toString();
-         if (!raw) return;
-         const payload = safeJsonParse<unknown>(raw);
-         if (payload == null) return;
-         try {
-            await Promise.resolve(options.onMessage(payload, raw));
-         } catch (err) {
-            console.error('[Kafka consumer] Handler error:', err);
-         }
-      },
-   });
+   await connectSubscribeAndRun(
+      consumer,
+      async () =>
+         consumer.subscribe({ topic: options.topic, fromBeginning: false }),
+      async () =>
+         consumer.run({
+            eachMessage: async ({ message }) => {
+               const raw = message.value?.toString();
+               if (!raw) return;
+               const payload = safeJsonParse<unknown>(raw);
+               if (payload == null) return;
+               try {
+                  await Promise.resolve(options.onMessage(payload, raw));
+               } catch (err) {
+                  console.error('[Kafka consumer] Handler error:', err);
+               }
+            },
+         }),
+      options.groupId,
+      options.topic
+   );
 }
