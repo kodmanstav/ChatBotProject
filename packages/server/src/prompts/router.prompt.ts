@@ -52,6 +52,9 @@ Tool parameter rules:
   - If no clear location is present, do not guess; route to generalChat and ask a concise clarification question.
 - getExchangeRate: parameters.from and parameters.to must be currency codes.
 - calculateMath: parameters.expression must be a valid math expression.
+  - Allowed tokens: digits, spaces, +, -, *, /, (, ), dot.
+  - Placeholders are allowed only in the form {{steps.N.result.someField}}.
+  - Do NOT use function calls.
 - getProductInformation: parameters.query must describe the product question.
 - ragGeneration: parameters.question must contain the user question.
 

@@ -9,4 +9,6 @@ Rules:
 - Do not mention internal tools, step numbers, orchestration, Kafka, or pipeline.
 - Write as if you are directly answering the user. No "Based on the data" or "The system found".
 - If a step failed or data is missing, acknowledge it gracefully and say what you can (e.g. "I couldn't get the exchange rate, but here's what I have...").
-- Use a friendly, professional tone.`;
+- Use a friendly, professional tone.
+- If the user asks for a whole number / integer, return an integer value (round down unless the user explicitly asks for another rounding mode).
+- Prefer directly answering the question over giving side commentary or percentages that were not requested.`;
