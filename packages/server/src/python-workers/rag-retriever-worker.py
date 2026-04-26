@@ -631,8 +631,20 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    # Keep startup fast and non-blocking; use local fallback retrieval immediately.
+    # Initialize Chroma + product indexing at startup.
+    # If initialization fails, keep serving with local-file fallback.
     collection = None
+    try:
+        logger.info("[RAG Worker] Initializing Chroma collection: %s", CHROMA_COLLECTION)
+        collection = get_chroma_collection()
+        index_products_if_needed(collection)
+        logger.info("[RAG Worker] Chroma retrieval enabled")
+    except Exception as e:
+        collection = None
+        logger.warning(
+            "[RAG Worker] Chroma initialization failed, using local file fallback only: %s",
+            str(e),
+        )
 
     logger.info("[RAG Worker] Consuming %s for tool %s", CONSUME_TOPIC, TOOL_NAME)
 
