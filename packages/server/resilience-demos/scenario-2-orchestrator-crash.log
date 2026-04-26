@@ -1,0 +1,31 @@
+# Scenario 2 – Orchestrator process killed mid-plan; recovery from conversation-events + LevelDB state
+# conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1
+#
+# Setup used for reliable capture: exchange-rate-worker was stopped before the query so step-1 could not finish while
+# the orchestrator was still running; after PlanGenerated the orchestrator dispatched getExchangeRate; the orchestrator
+# was SIGKILLed; exchange-rate-worker was started and published ToolInvocationResulted to conversation-events; the
+# orchestrator container was started again and logged "Started. State store ready" then consumed the pending
+# ToolInvocationResulted and continued the plan (3-step LLM plan in this run: getExchangeRate + two calculateMath steps).
+#
+# State path (host bind mount): packages/server/.orchestrator-state/ (LevelDB) – see state-store.service.ts
+
+router-1                | [2026-04-26T22:53:41.342+03:00] [Router] Received user query for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
+router-1                | [2026-04-26T22:54:15.014+03:00] [Router] Published PlanGenerated for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
+orchestrator-1          | [2026-04-26T22:54:15.111+03:00] [Orchestrator] Initialized state for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
+orchestrator-1          | [2026-04-26T22:54:15.450+03:00] [Orchestrator] Dispatching step 1 -> getExchangeRate
+orchestrator-1          | [2026-04-26T22:54:15.450+03:00] [Orchestrator] Dispatched step 1 (getExchangeRate). Plan has 3 steps. Waiting for ToolInvocationResulted (completed: 0/3).
+orchestrator-1          | [2026-04-26T22:54:32.465+03:00] [Orchestrator] Started. State store ready. Consuming conversation-events and tool-invocation-requests. Persisted plan state (if any) will be used when events arrive.
+exchange-rate-worker-1  | [2026-04-26T22:54:33.335+03:00] [Exchange Worker] Received ToolInvocationRequested conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=1 tool=getExchangeRate
+exchange-rate-worker-1  | [2026-04-26T22:54:33.409+03:00] [Exchange Worker] Published ToolInvocationResulted conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=1 tool=getExchangeRate
+orchestrator-1          | [2026-04-26T22:55:17.421+03:00] [Orchestrator] Applying result to plan state for conversation e52e6399-d264-4659-ac1f-cc4858a816e1 (step 1, completed so far: 0/3).
+orchestrator-1          | [2026-04-26T22:55:17.422+03:00] [Orchestrator] Received ToolInvocationResulted for step 1
+orchestrator-1          | [2026-04-26T22:55:17.424+03:00] [Orchestrator] Plan resuming: received result for step 1 (getExchangeRate) (completed: 1/3).
+orchestrator-1          | [2026-04-26T22:55:17.511+03:00] [Orchestrator] Dispatching step 2 -> calculateMath
+orchestrator-1          | [2026-04-26T22:55:17.512+03:00] [Orchestrator] Dispatched step 2 (calculateMath). Waiting for ToolInvocationResulted (completed: 1/3).
+math-worker-1           | [2026-04-26T22:55:17.508+03:00] [Math Worker] Received ToolInvocationRequested conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=2 tool=calculateMath
+math-worker-1           | [2026-04-26T22:55:17.514+03:00] [Math Worker] Published ToolInvocationResulted conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=2 tool=calculateMath
+orchestrator-1          | [2026-04-26T22:55:17.535+03:00] [Orchestrator] Dispatching step 3 -> calculateMath
+orchestrator-1          | [2026-04-26T22:55:17.535+03:00] [Orchestrator] Dispatched step 3 (calculateMath). Waiting for ToolInvocationResulted (completed: 2/3).
+math-worker-1           | [2026-04-26T22:55:17.536+03:00] [Math Worker] Received ToolInvocationRequested conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=3 tool=calculateMath
+math-worker-1           | [2026-04-26T22:55:17.541+03:00] [Math Worker] Published ToolInvocationResulted conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=3 tool=calculateMath
+orchestrator-1          | [2026-04-26T22:55:17.577+03:00] [Orchestrator] Plan completed for conversation e52e6399-d264-4659-ac1f-cc4858a816e1

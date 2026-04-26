@@ -1,0 +1,21 @@
+# Scenario 3 – Duplicate ToolInvocationRequested (idempotency in math-worker)
+# conversationId=d41e8a57-950d-49c6-afed-0ad45940a7c0
+#
+# 1) UserQueryReceived published to user-commands for prompt "What is 7 plus 8?" → router emitted PlanGenerated →
+#    orchestrator dispatched calculateMath step 1.
+# 2) The exact ToolInvocationRequested JSON was read back from Kafka topic tool-invocation-requests (kafka-console-consumer)
+#    and re-published unchanged with kafka-console-producer.
+# 3) math-worker alreadyProcessed() in packages/server/src/utils/idempotency.ts keyed by conversationId+step+tool →
+#    second delivery is ignored (no second ToolInvocationResulted).
+
+router-1                | [2026-04-26T22:56:34.599+03:00] [Router] Received user query for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
+router-1                | [2026-04-26T22:57:03.961+03:00] [Router] Published PlanGenerated for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
+orchestrator-1          | [2026-04-26T22:57:03.967+03:00] [Orchestrator] Initialized state for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
+math-worker-1           | [2026-04-26T22:57:03.972+03:00] [Math Worker] Received ToolInvocationRequested conversationId=d41e8a57-950d-49c6-afed-0ad45940a7c0 step=1 tool=calculateMath
+math-worker-1           | [2026-04-26T22:57:03.983+03:00] [Math Worker] Published ToolInvocationResulted conversationId=d41e8a57-950d-49c6-afed-0ad45940a7c0 step=1 tool=calculateMath
+orchestrator-1          | [2026-04-26T22:57:04.020+03:00] [Orchestrator] Plan completed for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
+
+# Re-published duplicate (same bytes as captured from Kafka):
+# {"eventType":"ToolInvocationRequested","conversationId":"d41e8a57-950d-49c6-afed-0ad45940a7c0","timestamp":"2026-04-26T19:57:03.967Z","payload":{"step":1,"tool":"calculateMath","parameters":{"expression":"7 + 8"}}}
+
+math-worker-1           | [2026-04-26T23:00:12.919+03:00] [Math Worker] Skipping duplicate conversationId=d41e8a57-950d-49c6-afed-0ad45940a7c0 step=1 tool=calculateMath

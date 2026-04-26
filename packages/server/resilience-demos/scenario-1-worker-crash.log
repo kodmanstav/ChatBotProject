@@ -1,0 +1,23 @@
+# Scenario 1 – Python rag-worker down during plan (conversationId=813a8094-c8c1-48b1-8dcc-457d82087e64)
+# Sequence: rag-worker was stopped BEFORE UserQueryReceived was published; orchestrator dispatched
+# getProductInformation while no consumer processed the request; after ~54s rag-worker was started again;
+# RAG consumed the pending ToolInvocationRequest and published ToolInvocationResulted; orchestrator resumed.
+#
+# Evidence of "stuck" plan: compare orchestrator dispatch time 22:47:24.747 vs RAG "Received" 22:48:19.146 (~54s gap with worker absent).
+
+router-1                | [2026-04-26T22:46:52.826+03:00] [Router] Received user query for conversation 813a8094-c8c1-48b1-8dcc-457d82087e64
+router-1                | [2026-04-26T22:47:24.692+03:00] [Router] Published PlanGenerated for conversation 813a8094-c8c1-48b1-8dcc-457d82087e64
+orchestrator-1          | [2026-04-26T22:47:24.701+03:00] [Orchestrator] Initialized state for conversation 813a8094-c8c1-48b1-8dcc-457d82087e64
+orchestrator-1          | [2026-04-26T22:47:24.746+03:00] [Orchestrator] Dispatching step 1 -> getProductInformation
+orchestrator-1          | [2026-04-26T22:47:24.747+03:00] [Orchestrator] Dispatched step 1 (getProductInformation). Plan has 1 steps. Waiting for ToolInvocationResulted (completed: 0/1).
+orchestrator-1          | [2026-04-26T22:47:24.747+03:00] [Orchestrator] Resolved parameters: {
+orchestrator-1          |   "query": "what products do you have and what are their prices"
+orchestrator-1          | }
+rag-worker-1            | 2026-04-26T22:48:19.146+03:00 [RAG Worker] Received ToolInvocationRequested conversationId=813a8094-c8c1-48b1-8dcc-457d82087e64 step=1 tool=getProductInformation
+rag-worker-1            | 2026-04-26T22:48:19.328+03:00 [RAG Worker] Published ToolInvocationResulted conversationId=813a8094-c8c1-48b1-8dcc-457d82087e64 step=1 tool=getProductInformation
+orchestrator-1          | [2026-04-26T22:48:19.403+03:00] [Orchestrator] Applying result to plan state for conversation 813a8094-c8c1-48b1-8dcc-457d82087e64 (step 1, completed so far: 0/1).
+orchestrator-1          | [2026-04-26T22:48:19.403+03:00] [Orchestrator] Received ToolInvocationResulted for step 1
+orchestrator-1          | [2026-04-26T22:48:19.403+03:00] [Orchestrator] Plan resuming: received result for step 1 (getProductInformation) (completed: 1/1).
+orchestrator-1          | [2026-04-26T22:48:19.457+03:00] [Orchestrator] Plan completed for conversation 813a8094-c8c1-48b1-8dcc-457d82087e64
+aggregator-1            | [2026-04-26T22:48:19.490+03:00] [Aggregator] PlanCompleted received for 813a8094-c8c1-48b1-8dcc-457d82087e64
+synthesis-worker-1      | [2026-04-26T22:48:24.920+03:00] [Synthesis Worker] Received synthesis request for 813a8094-c8c1-48b1-8dcc-457d82087e64
