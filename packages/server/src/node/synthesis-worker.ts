@@ -62,7 +62,7 @@ async function main(): Promise<void> {
       groupId: CONSUMER_GROUP,
       onMessage: async (payload) => {
          if (!isSynthesizeRequest(payload)) return;
-         const { conversationId, timestamp, payload: pl } = payload;
+         const { conversationId, payload: pl } = payload;
          const planResults = pl.planResults;
 
          if (synthesizedConversations.has(conversationId)) {
