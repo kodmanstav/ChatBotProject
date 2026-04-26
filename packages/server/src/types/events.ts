@@ -1,3 +1,4 @@
+/** Kafka event envelope: `timestamp` is ISO-8601 creation time of this event. */
 export interface BaseEvent {
    eventType: string;
    conversationId: string;

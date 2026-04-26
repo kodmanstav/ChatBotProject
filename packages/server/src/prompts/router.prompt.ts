@@ -36,7 +36,7 @@ Rules:
 - plan must be an array
 - parameters must be an object
 - final_answer_synthesis_required must be boolean
-- CRITICAL: If the user is asking about products, prices, catalog, inventory, shopping, brands, models, or what you sell, step 1 MUST be getProductInformation with parameters.query set to the user's full message (trimmed). Do not use generalChat as the only step for those requests, even to ask for clarification—retrieve first, then the UI can refine.
+- CRITICAL (catalog only): If the user needs **catalog-retrieved product facts** (what you sell, list/prices of products, specs, comparisons from inventory, recommendations that require product documents), step 1 MUST be getProductInformation with parameters.query set to the user's full message (trimmed). Do not use generalChat as the only step for those. Do **not** treat "buy / purchase / shopping" plus a product name as catalog-only: if the question is mainly about **weather, temperature thresholds, travel timing, FX, or math-based decisions** and the product is only context (for example "buy Laptop Pro in São Paulo if temperature …"), follow the multi-step pattern in the examples—start with getWeather (or the appropriate factual tool), not getProductInformation, unless the answer truly requires retrieved catalog fields.
 
 Important routing rule:
 - If the user's request depends on external factual data such as weather, exchange rates, or product data, do NOT use generalChat alone.
@@ -96,8 +96,9 @@ Validation before final JSON:
 - Normalize parameter strings by trimming whitespace and removing trailing punctuation.
 - Step numbers must start at 1 and increase by 1.
 - Product routing hard constraint:
-  - If the user asks anything about products/prices/catalog/availability/specifications/recommendations, step 1 MUST be getProductInformation.
+  - If the user needs **inventory/catalog answers** (prices, specs, what products exist, field-specific product values), step 1 MUST be getProductInformation.
   - In those cases, DO NOT use generalChat as the only step.
+  - If the user mixes a product name with a **weather- or threshold-based decision** (see São Paulo Laptop example below), prioritize getWeather + calculateMath + reasoning; do not substitute getProductInformation for step 1 unless catalog text is required to answer.
 
 Examples:
 

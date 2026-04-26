@@ -515,6 +515,9 @@ def parse_message(value: bytes) -> dict | None:
             return None
         if "conversationId" not in data or "payload" not in data:
             return None
+        ts = data.get("timestamp")
+        if not isinstance(ts, str) or not ts.strip():
+            return None
         payload = data["payload"]
         if not isinstance(payload, dict) or payload.get("tool") != TOOL_NAME:
             return None

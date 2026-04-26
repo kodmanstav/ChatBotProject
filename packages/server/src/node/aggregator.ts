@@ -14,12 +14,14 @@ const resultsByConversation = new Map<string, Record<string, unknown>>();
 function isToolInvocationResulted(payload: unknown): payload is {
    eventType: 'ToolInvocationResulted';
    conversationId: string;
+   timestamp: string;
    payload: { step?: number; tool: string; success: boolean; result: unknown };
 } {
    if (payload == null || typeof payload !== 'object') return false;
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'ToolInvocationResulted') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return typeof p.tool === 'string' && typeof p.success === 'boolean';

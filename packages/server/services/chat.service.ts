@@ -14,8 +14,9 @@ const RESPONSE_TIMEOUT_MS = Number(
 );
 
 type PendingRequest = {
-   resolve: (value: { message: string }) => void;
+   resolve: (value: { message: string; latencyMs: number | null }) => void;
    timeoutId: ReturnType<typeof setTimeout>;
+   userQueryTimestamp: string;
 };
 
 class ChatService {
@@ -34,6 +35,7 @@ class ChatService {
       const event = payload as Record<string, unknown>;
       if (event.eventType !== 'FinalAnswerSynthesized') return false;
       if (typeof event.conversationId !== 'string') return false;
+      if (typeof event.timestamp !== 'string') return false;
       if (event.payload == null || typeof event.payload !== 'object')
          return false;
       const nested = event.payload as Record<string, unknown>;
@@ -60,7 +62,16 @@ class ChatService {
 
             clearTimeout(pendingRequest.timeoutId);
             this.pending.delete(payload.conversationId);
-            pendingRequest.resolve({ message: payload.payload.finalAnswer });
+            const t0 = Date.parse(pendingRequest.userQueryTimestamp);
+            const t1 = Date.parse(payload.timestamp);
+            const latencyMs =
+               Number.isFinite(t0) && Number.isFinite(t1) && t1 >= t0
+                  ? t1 - t0
+                  : null;
+            pendingRequest.resolve({
+               message: payload.payload.finalAnswer,
+               latencyMs,
+            });
          },
       }).catch((error) => {
          console.error('[chat.service] consumer crashed:', error);
@@ -71,7 +82,7 @@ class ChatService {
    async sendMessage(
       prompt: string,
       conversationId: string
-   ): Promise<{ message: string }> {
+   ): Promise<{ message: string; latencyMs: number | null }> {
       await this.ensureInitialized();
 
       if (this.producer == null) {
@@ -92,20 +103,25 @@ class ChatService {
          payload: { userInput: prompt },
       };
 
-      const answerPromise = new Promise<{ message: string }>(
-         (resolve, reject) => {
-            const timeoutId = setTimeout(() => {
-               this.pending.delete(conversationId);
-               reject(
-                  new Error(
-                     `Timed out waiting for final answer (${RESPONSE_TIMEOUT_MS}ms)`
-                  )
-               );
-            }, RESPONSE_TIMEOUT_MS);
+      const answerPromise = new Promise<{
+         message: string;
+         latencyMs: number | null;
+      }>((resolve, reject) => {
+         const timeoutId = setTimeout(() => {
+            this.pending.delete(conversationId);
+            reject(
+               new Error(
+                  `Timed out waiting for final answer (${RESPONSE_TIMEOUT_MS}ms)`
+               )
+            );
+         }, RESPONSE_TIMEOUT_MS);
 
-            this.pending.set(conversationId, { resolve, timeoutId });
-         }
-      );
+         this.pending.set(conversationId, {
+            resolve,
+            timeoutId,
+            userQueryTimestamp: timestamp,
+         });
+      });
 
       const published = await publishValidated(this.producer, {
          topic: TOPICS.USER_COMMANDS,

@@ -16,10 +16,15 @@ import { runConsumer } from '../kafka/consumer';
 import type { UserQueryReceivedEvent } from '../types/events';
 import { logInfo, logError } from '../utils/logger';
 import { safeJsonParse } from '../utils/json';
+import { computeEndToEndLatencyMs } from '../utils/conversation-latency';
 
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
-const CONSUMER_GROUP = 'user-interface-events';
+// Each process must use its own group: multiple CLI instances (or: compose `up` + `run --rm`) sharing one group
+// will partition FinalAnswerSynthesized so only one client sees the response.
+const CONSUMER_GROUP =
+   process.env.USER_INTERFACE_CONSUMER_GROUP ??
+   `user-interface-${process.env.HOSTNAME ?? `pid-${process.pid}`}`;
 
 const PENDING_FILE =
    process.env.PENDING_CONVERSATION_FILE ??
@@ -28,21 +33,33 @@ const PENDING_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 const RECOVERY_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 const RECOVERY_SCAN_TIMEOUT_MS = 30 * 1000; // 30s scan from beginning
 
-function readPending(): { conversationId: string } | null {
+type PendingRecord = {
+   conversationId: string;
+   /** When the pending file was written (recovery TTL). */
+   timestamp: string;
+   /** Same ISO string as UserQueryReceived.timestamp (for E2E latency). */
+   userQueryTimestamp?: string;
+};
+
+function readPending(): {
+   conversationId: string;
+   userQueryTimestamp: string;
+} | null {
    if (!existsSync(PENDING_FILE)) return null;
    try {
       const raw = readFileSync(PENDING_FILE, 'utf-8');
-      const data = JSON.parse(raw) as {
-         conversationId: string;
-         timestamp: string;
-      };
+      const data = JSON.parse(raw) as PendingRecord;
       if (!data.conversationId || !data.timestamp) return null;
       const age = Date.now() - new Date(data.timestamp).getTime();
       if (age > PENDING_MAX_AGE_MS) {
          unlinkSync(PENDING_FILE);
          return null;
       }
-      return { conversationId: data.conversationId };
+      const userQueryTimestamp =
+         typeof data.userQueryTimestamp === 'string' && data.userQueryTimestamp
+            ? data.userQueryTimestamp
+            : data.timestamp;
+      return { conversationId: data.conversationId, userQueryTimestamp };
    } catch {
       try {
          unlinkSync(PENDING_FILE);
@@ -51,16 +68,21 @@ function readPending(): { conversationId: string } | null {
    }
 }
 
-function writePending(conversationId: string): void {
+function writePending(
+   conversationId: string,
+   userQueryTimestamp: string
+): void {
    const dir = path.dirname(PENDING_FILE);
    if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
    }
+   const now = new Date().toISOString();
    writeFileSync(
       PENDING_FILE,
       JSON.stringify({
          conversationId,
-         timestamp: new Date().toISOString(),
+         timestamp: now,
+         userQueryTimestamp,
       }),
       'utf-8'
    );
@@ -75,15 +97,41 @@ function clearPending(): void {
 function isFinalAnswerEvent(payload: unknown): payload is {
    eventType: 'FinalAnswerSynthesized';
    conversationId: string;
+   timestamp: string;
    payload: { finalAnswer: string };
 } {
    if (payload == null || typeof payload !== 'object') return false;
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'FinalAnswerSynthesized') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return typeof p.finalAnswer === 'string';
+}
+
+function formatLatencyLine(
+   conversationId: string,
+   userQueryIso: string,
+   finalAnswerIso: string
+): string {
+   const ms = computeEndToEndLatencyMs(
+      [
+         {
+            eventType: 'UserQueryReceived',
+            conversationId,
+            timestamp: userQueryIso,
+         },
+         {
+            eventType: 'FinalAnswerSynthesized',
+            conversationId,
+            timestamp: finalAnswerIso,
+         },
+      ],
+      conversationId
+   );
+   if (ms == null) return '';
+   return `End-to-end latency: ${ms} ms (conversationId=${conversationId})`;
 }
 
 /**
@@ -92,7 +140,9 @@ function isFinalAnswerEvent(payload: unknown): payload is {
  */
 async function recoveryScan(
    conversationId: string
-): Promise<{ found: true; answer: string } | { found: false }> {
+): Promise<
+   { found: true; answer: string; finalTimestamp: string } | { found: false }
+> {
    const kafka = createKafkaClient('user-interface-recovery', {
       logLevel: logLevel.NOTHING,
    });
@@ -105,48 +155,51 @@ async function recoveryScan(
       fromBeginning: true,
    });
 
-   return new Promise<{ found: true; answer: string } | { found: false }>(
-      (resolve) => {
-         let settled = false;
-         const done = (
-            result: { found: true; answer: string } | { found: false }
-         ) => {
-            if (settled) return;
-            settled = true;
+   return new Promise<
+      { found: true; answer: string; finalTimestamp: string } | { found: false }
+   >((resolve) => {
+      let settled = false;
+      const done = (
+         result:
+            | { found: true; answer: string; finalTimestamp: string }
+            | { found: false }
+      ) => {
+         if (settled) return;
+         settled = true;
+         clearTimeout(timeout);
+         consumer.disconnect().catch(() => {});
+         resolve(result);
+      };
+
+      const timeout = setTimeout(() => {
+         done({ found: false });
+      }, RECOVERY_SCAN_TIMEOUT_MS);
+
+      consumer
+         .run({
+            eachMessage: async ({ message }) => {
+               const raw = message.value?.toString();
+               if (!raw) return;
+               const payload = safeJsonParse<unknown>(raw);
+               if (payload == null) return;
+               if (
+                  isFinalAnswerEvent(payload) &&
+                  payload.conversationId === conversationId
+               ) {
+                  done({
+                     found: true,
+                     answer: payload.payload.finalAnswer,
+                     finalTimestamp: payload.timestamp,
+                  });
+               }
+            },
+         })
+         .catch((err) => {
             clearTimeout(timeout);
-            consumer.disconnect().catch(() => {});
-            resolve(result);
-         };
-
-         const timeout = setTimeout(() => {
+            logError('Recovery scan consumer error:', err);
             done({ found: false });
-         }, RECOVERY_SCAN_TIMEOUT_MS);
-
-         consumer
-            .run({
-               eachMessage: async ({ message }) => {
-                  const raw = message.value?.toString();
-                  if (!raw) return;
-                  const payload = safeJsonParse<unknown>(raw);
-                  if (payload == null) return;
-                  if (
-                     isFinalAnswerEvent(payload) &&
-                     payload.conversationId === conversationId
-                  ) {
-                     done({
-                        found: true,
-                        answer: payload.payload.finalAnswer,
-                     });
-                  }
-               },
-            })
-            .catch((err) => {
-               clearTimeout(timeout);
-               logError('Recovery scan consumer error:', err);
-               done({ found: false });
-            });
-      }
-   );
+         });
+   });
 }
 
 async function main(): Promise<void> {
@@ -157,6 +210,8 @@ async function main(): Promise<void> {
    await producer.connect();
 
    let pendingConversationId: string | null = null;
+   /** Matches UserQueryReceived.timestamp for the active pending conversation. */
+   let pendingUserQueryTimestamp: string | null = null;
    let promptCallback: (() => void) | null = null;
 
    const pending = readPending();
@@ -168,11 +223,20 @@ async function main(): Promise<void> {
       );
       const scanResult = await recoveryScan(pending.conversationId);
       if (scanResult.found) {
-         console.log(`\nAssistant: ${scanResult.answer}\n`);
+         const lat = formatLatencyLine(
+            pending.conversationId,
+            pending.userQueryTimestamp,
+            scanResult.finalTimestamp
+         );
+         console.log(
+            `\nAssistant: ${scanResult.answer}${lat ? `\n${lat}` : ''}\n`
+         );
          clearPending();
          pendingConversationId = null;
+         pendingUserQueryTimestamp = null;
       } else {
          pendingConversationId = pending.conversationId;
+         pendingUserQueryTimestamp = pending.userQueryTimestamp;
          logInfo(
             'Recovery: no answer in recent history; waiting for live answer (timeout ',
             RECOVERY_TIMEOUT_MS / 1000,
@@ -191,9 +255,19 @@ async function main(): Promise<void> {
             payload.conversationId === pendingConversationId
          ) {
             const answer = payload.payload.finalAnswer;
-            console.log(`\nAssistant: ${answer}\n`);
+            const userTs = pendingUserQueryTimestamp;
+            const lat =
+               userTs != null
+                  ? formatLatencyLine(
+                       payload.conversationId,
+                       userTs,
+                       payload.timestamp
+                    )
+                  : '';
+            console.log(`\nAssistant: ${answer}${lat ? `\n${lat}` : ''}\n`);
             clearPending();
             pendingConversationId = null;
+            pendingUserQueryTimestamp = null;
             if (promptCallback) promptCallback();
          }
       },
@@ -214,6 +288,7 @@ async function main(): Promise<void> {
          if (pendingConversationId !== null) {
             clearPending();
             pendingConversationId = null;
+            pendingUserQueryTimestamp = null;
             logInfo(
                'Recovery timeout – no answer received. You can type a new message.\n'
             );
@@ -261,7 +336,8 @@ async function main(): Promise<void> {
          return;
       }
       pendingConversationId = conversationId;
-      writePending(conversationId);
+      pendingUserQueryTimestamp = timestamp;
+      writePending(conversationId, timestamp);
       logInfo(
          'Sent command for conversation',
          conversationId,

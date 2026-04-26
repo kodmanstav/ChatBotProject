@@ -23,6 +23,7 @@ function isPlanGenerated(payload: unknown): payload is PlanGeneratedEvent {
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'PlanGenerated') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return Array.isArray(p.plan);
@@ -35,6 +36,7 @@ function isToolInvocationResulted(
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'ToolInvocationResulted') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return typeof p.tool === 'string' && typeof p.success === 'boolean';
@@ -47,7 +49,8 @@ function isToolInvocationRequested(
    const o = payload as Record<string, unknown>;
    return (
       o.eventType === 'ToolInvocationRequested' &&
-      typeof o.conversationId === 'string'
+      typeof o.conversationId === 'string' &&
+      typeof o.timestamp === 'string'
    );
 }
 
