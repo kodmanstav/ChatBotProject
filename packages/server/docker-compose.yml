@@ -77,6 +77,7 @@ services:
          OLLAMA_URL: http://ollama:11434/api/chat
          OLLAMA_ROUTER_MODEL: ${OLLAMA_ROUTER_MODEL:-llama3}
          OLLAMA_TIMEOUT_MS: ${OLLAMA_TIMEOUT_MS:-30000}
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -94,6 +95,7 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -111,6 +113,7 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -128,6 +131,7 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -145,6 +149,7 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -165,6 +170,7 @@ services:
          OLLAMA_URL: http://ollama:11434/api/chat
          OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}
          OLLAMA_TIMEOUT_MS: ${OLLAMA_TIMEOUT_MS:-30000}
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -182,6 +188,7 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -199,6 +206,7 @@ services:
          - .env
       environment:
          KAFKA_BROKERS: kafka:29092
+         TZ: Asia/Jerusalem
       volumes:
          - .:/app
          - /app/node_modules
@@ -216,6 +224,7 @@ services:
       environment:
          KAFKA_BROKERS: kafka:29092
          PROJECT_ROOT: /workspace
+         TZ: Asia/Jerusalem
       volumes:
          - ../..:/workspace
       depends_on:
@@ -233,6 +242,7 @@ services:
       environment:
          KAFKA_BROKERS: kafka:29092
          PENDING_CONVERSATION_FILE: /app/cli-state/.pending-conversation.json
+         TZ: Asia/Jerusalem
       volumes:
          - cli-state:/app/cli-state
       depends_on:

@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import { createKafkaClient, TOPICS } from '../kafka/client';
 import { runConsumerMulti } from '../kafka/consumer';
 import { publishValidated } from '../kafka/producer';

@@ -1,3 +1,4 @@
+import './utils/console-timestamp';
 import { Kafka } from 'kafkajs';
 import { safeJsonParse } from './utils/json';
 

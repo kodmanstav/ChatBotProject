@@ -6,15 +6,20 @@ publishes to analysis-urgency.
 
 import json
 import logging
+import os
 import sys
+from datetime import datetime
 from kafka import KafkaConsumer, KafkaProducer
 from transformers import pipeline
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-    stream=sys.stdout,
-)
+class LocalTimeFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        return datetime.now().astimezone().isoformat(timespec="milliseconds")
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(LocalTimeFormatter("%(asctime)s %(message)s"))
+
+logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
 logger = logging.getLogger(__name__)
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BROKERS", "localhost:9092")

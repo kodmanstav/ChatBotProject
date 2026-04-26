@@ -26,7 +26,14 @@ logger.propagate = False
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
-handler.setFormatter(logging.Formatter("%(message)s"))
+
+
+class LocalTimeFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        return datetime.now().astimezone().isoformat(timespec="milliseconds")
+
+
+handler.setFormatter(LocalTimeFormatter("%(asctime)s %(message)s"))
 logger.addHandler(handler)
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BROKERS", "localhost:9092")

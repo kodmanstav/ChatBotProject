@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import readline from 'node:readline';
 import path from 'node:path';
 import {
