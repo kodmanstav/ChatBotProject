@@ -16,7 +16,7 @@ It combines:
 
 - 💻 **CLI interface** that allows users to type natural-language queries and receive AI responses
 
-The same architecture supports **product-information RAG flows**, **review analysis**, and **tool orchestration**, all connected through **Kafka topics** and **JSON-schema-validated events**.
+The same architecture supports **product-information RAG flows** and **tool orchestration**, all connected through **Kafka topics** and **JSON-schema-validated events**.
 
 ## 🧠 Project Overview
 

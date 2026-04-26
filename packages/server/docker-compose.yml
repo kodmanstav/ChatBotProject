@@ -48,8 +48,6 @@ services:
            echo "Kafka metadata not ready yet, retrying..."
            sleep 2
          done
-         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic raw-reviews-topic --partitions 1 --replication-factor 1
-         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic processed-insights-topic --partitions 1 --replication-factor 1
          kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic user-commands --partitions 1 --replication-factor 1
          kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic conversation-events --partitions 1 --replication-factor 1
          kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic tool-invocation-requests --partitions 1 --replication-factor 1
