@@ -12,12 +12,10 @@ const CONSUMER_GROUP = 'synthesis-worker-group';
 
 const synthesizedConversations = new Set<string>();
 
-function enrichPlanResults(planResults: Record<string, unknown>): {
-   enriched: Record<string, unknown>;
-   detectedTotals: number[];
-} {
+function enrichPlanResults(
+   planResults: Record<string, unknown>
+): Record<string, unknown> {
    const enriched: Record<string, unknown> = {};
-   const detectedTotals: number[] = [];
 
    for (const [key, raw] of Object.entries(planResults ?? {})) {
       if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) {
@@ -47,42 +45,13 @@ function enrichPlanResults(planResults: Record<string, unknown>): {
          if (nums.length > 0) {
             const total = nums.reduce((acc, n) => acc + n, 0);
             obj.total_value = total;
-            detectedTotals.push(total);
          }
-      } else if (hasTotal) {
-         detectedTotals.push(obj.total_value as number);
       }
 
       enriched[key] = obj;
    }
 
-   return { enriched, detectedTotals };
-}
-
-function getLastMathResult(
-   planResults: Record<string, unknown>
-): { expression: string; value: number } | null {
-   const stepKeys = Object.keys(planResults ?? {})
-      .map((k) => Number(k))
-      .filter((n) => Number.isFinite(n))
-      .sort((a, b) => a - b);
-   for (let i = stepKeys.length - 1; i >= 0; i -= 1) {
-      const key = String(stepKeys[i]);
-      const raw = planResults[key];
-      if (raw == null || typeof raw !== 'object' || Array.isArray(raw))
-         continue;
-      const obj = raw as Record<string, unknown>;
-      const expression = obj.expression;
-      const value = obj.value;
-      if (
-         typeof expression === 'string' &&
-         typeof value === 'number' &&
-         Number.isFinite(value)
-      ) {
-         return { expression, value };
-      }
-   }
-   return null;
+   return enriched;
 }
 
 function buildFinalAnswerFromPlanResults(
@@ -161,8 +130,7 @@ async function main(): Promise<void> {
 
          let finalAnswer: string;
          try {
-            const { enriched: enrichedPlanResults, detectedTotals } =
-               enrichPlanResults(planResults);
+            const enrichedPlanResults = enrichPlanResults(planResults);
             const text = JSON.stringify(enrichedPlanResults, null, 2);
             console.log('[Synthesis] Using OpenAI');
             const openAiAnswer = await callOpenAI([
@@ -174,19 +142,6 @@ async function main(): Promise<void> {
             ]);
             if (openAiAnswer && openAiAnswer.trim()) {
                finalAnswer = openAiAnswer.trim();
-               const total = detectedTotals[0];
-               const lastMath = getLastMathResult(enrichedPlanResults);
-               if (lastMath && !finalAnswer.includes(lastMath.expression)) {
-                  finalAnswer += `\n\nComputed: ${lastMath.expression} = ${lastMath.value}`;
-               }
-               if (
-                  typeof total === 'number' &&
-                  Number.isFinite(total) &&
-                  !finalAnswer.includes(String(total)) &&
-                  !finalAnswer.includes(total.toLocaleString('en-US'))
-               ) {
-                  finalAnswer += `\n\nTotal: ${total.toLocaleString('en-US')}`;
-               }
             } else {
                finalAnswer =
                   buildFinalAnswerFromPlanResults(enrichedPlanResults);

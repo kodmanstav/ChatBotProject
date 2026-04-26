@@ -36,6 +36,7 @@ Rules:
 - plan must be an array
 - parameters must be an object
 - final_answer_synthesis_required must be boolean
+- CRITICAL: If the user is asking about products, prices, catalog, inventory, shopping, brands, models, or what you sell, step 1 MUST be getProductInformation with parameters.query set to the user's full message (trimmed). Do not use generalChat as the only step for those requests, even to ask for clarification—retrieve first, then the UI can refine.
 
 Important routing rule:
 - If the user's request depends on external factual data such as weather, exchange rates, or product data, do NOT use generalChat alone.

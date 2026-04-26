@@ -57,6 +57,7 @@ async function callOllama(userInput: string): Promise<string> {
          body: JSON.stringify({
             model: OLLAMA_MODEL,
             stream: false,
+            options: { temperature: 0.1 },
             messages: [
                { role: 'system', content: ROUTER_SYSTEM_PROMPT.trim() },
                { role: 'user', content: userInput },
@@ -84,7 +85,7 @@ async function callOpenAI(userInput: string): Promise<string> {
          { role: 'system', content: ROUTER_SYSTEM_PROMPT.trim() },
          { role: 'user', content: userInput },
       ],
-      temperature: 0.2,
+      temperature: 0,
       max_tokens: 1024,
    });
    const content = resp.choices?.[0]?.message?.content?.trim();
