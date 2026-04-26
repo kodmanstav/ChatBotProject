@@ -218,6 +218,8 @@ This will start:
 - Aggregator
 - Synthesis Worker
 - Python RAG Worker
+- Server API (`server`, port `3000`)
+- Frontend UI (`client`, port `5173`)
 
 All services run in the background.
 
@@ -297,6 +299,25 @@ The CLI:
 - Publishes ```UserQueryReceived```
 - Waits for ```FinalAnswerSynthesized```
 - Prints the final assistant response
+
+---
+
+### 5️⃣ Use the Frontend UI
+
+After `docker compose up -d`, the frontend is available at:
+
+- `http://localhost:5173`
+
+The frontend sends chat requests to:
+
+- `POST /api/chat` (proxied to `server:3000` inside Docker)
+
+Quick E2E check:
+
+1. Open `http://localhost:5173`
+2. Type a question in the chat input
+3. Verify the response appears in the chat window
+4. Optionally confirm API health at `http://localhost:3000/health`
 
 ## 🐳 Working with Docker
 
@@ -488,7 +509,7 @@ This is essential in Kafka‑based systems where retries or replays can deliver 
 This README centralizes:
 
 - A **visual architecture** of the event‑driven AI agent.
-- **Run instructions** for Kafka, Node services, Python workers, and the CLI.
+- **Run instructions** for Kafka, Node services, Python workers, CLI, and frontend UI.
 - A detailed explanation of how **event sourcing** and **stateful stream processing** are applied using Kafka topics, the orchestrator, and workers.
 
 Use it together with:

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import TypingIndicator from './TypingIndicator';
 import type { Message } from './ChatMessages';
 import ChatMessages from './ChatMessages';
@@ -21,7 +21,6 @@ const ChatBot = () => {
    const [messages, setMessages] = useState<Message[]>([]);
    const [isBotTyping, setIsBotTyping] = useState(false);
    const [error, setError] = useState('');
-   const conversationId = useRef(crypto.randomUUID());
 
    const onSubmit = async ({ prompt }: ChatFormData) => {
       try {
@@ -32,9 +31,12 @@ const ChatBot = () => {
 
          const { data } = await axios.post<ChatResponse>('/api/chat', {
             prompt,
-            conversationId: conversationId.current,
+            conversationId: crypto.randomUUID(),
          });
-         setMessages((prev) => [...prev, { role: 'bot', json: data }]);
+         setMessages((prev) => [
+            ...prev,
+            { role: 'bot', content: data.message },
+         ]);
 
          notificationAudio.play();
       } catch (error) {

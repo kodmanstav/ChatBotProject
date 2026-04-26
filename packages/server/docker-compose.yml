@@ -215,6 +215,43 @@ services:
             condition: service_completed_successfully
       restart: unless-stopped
 
+   server:
+      build:
+         context: .
+         dockerfile: src/node/Dockerfile
+      command: bun run dev
+      env_file:
+         - .env
+      environment:
+         KAFKA_BROKERS: kafka:29092
+         PORT: 3000
+         TZ: Asia/Jerusalem
+      volumes:
+         - .:/app
+         - /app/node_modules
+      ports:
+         - '3000:3000'
+      depends_on:
+         kafka-init:
+            condition: service_completed_successfully
+      restart: unless-stopped
+
+   client:
+      build:
+         context: ../client
+         dockerfile: Dockerfile
+      environment:
+         VITE_API_PROXY_TARGET: http://server:3000
+         TZ: Asia/Jerusalem
+      volumes:
+         - ../client:/app
+         - /app/node_modules
+      ports:
+         - '5173:5173'
+      depends_on:
+         - server
+      restart: unless-stopped
+
    rag-worker:
       build:
          context: ./src/python-workers

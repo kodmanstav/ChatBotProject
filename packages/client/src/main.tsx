@@ -10,7 +10,9 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById('root')!).render(
    <StrictMode>
       <QueryClientProvider client={queryClient}>
-         <App />
+         <div style={{ maxWidth: 900, margin: '40px auto', padding: 16 }}>
+            <App />
+         </div>
       </QueryClientProvider>
    </StrictMode>
 );

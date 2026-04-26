@@ -31,12 +31,12 @@ router.post(
 
       try {
          const result = await chatService.sendMessage(prompt, conversationId);
-
-         // מחזירים טקסט (כמו אצלך)
-         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-         return res.send(result.message);
+         return res.json(result);
       } catch (err) {
          console.error('[routes] /api/chat error:', err);
+         if (err instanceof Error && err.message.includes('Timed out')) {
+            return res.status(504).json({ error: 'Gateway Timeout' });
+         }
          return res.status(500).json({ error: 'Internal Server Error' });
       }
    }
