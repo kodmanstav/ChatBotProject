@@ -25,9 +25,10 @@ function isToolRequest(payload: unknown): payload is {
 
 function calculate(expression: string): number | null {
    const trimmed = String(expression).replace(/\s+/g, '').trim();
-   if (!/^[\d\s+\-*/().]+$/.test(trimmed)) return null;
+   if (!/^[\d+\-*/().]+$/.test(trimmed)) return null;
    try {
-      return Function(`"use strict"; return (${trimmed})`)() as number;
+      const value = Function(`"use strict"; return (${trimmed})`)() as unknown;
+      return typeof value === 'number' && Number.isFinite(value) ? value : null;
    } catch {
       return null;
    }

@@ -99,20 +99,17 @@ function sanitizeMathExpression(raw: string): string | null {
    const trimmed = raw.trim();
    if (!trimmed) return null;
 
-   // Generic sanitization: remove function-call identifiers and keep only grouping.
-   // Example: anyName(1+2) -> (1+2)
-   const withoutFunctionNames = trimmed.replace(
-      /\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(/g,
-      '('
-   );
-   const normalized = withoutFunctionNames.replace(/\s+/g, ' ').trim();
+   // Keep expressions stable but normalize whitespace.
+   const normalized = trimmed.replace(/\s+/g, ' ').trim();
 
-   // Allow placeholders used by orchestration plus arithmetic tokens only.
+   // Allow placeholders used by orchestration plus arithmetic tokens.
+   // Support both {{steps.N.result}} and nested paths (e.g. .result.rate).
    const placeholderSafe = normalized.replace(
-      /\{\{\s*steps\.\d+\.result\.[a-zA-Z0-9_]+\s*\}\}/g,
+      /\{\{\s*steps\.\d+\.result(?:\.[a-zA-Z0-9_]+)*\s*\}\}/g,
       '1'
    );
-   if (!/^[\d+\-*/().\s]+$/.test(placeholderSafe)) return null;
+
+   if (!/^[\d+\-*/().,\s]+$/.test(placeholderSafe)) return null;
    return normalized;
 }
 

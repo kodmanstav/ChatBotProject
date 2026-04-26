@@ -12,6 +12,8 @@ Rules:
 - Use a friendly, professional tone.
 - Prefer directly answering the user's main question over side commentary.
 - If the user asks for a whole number / integer, return an integer value (round down unless the user explicitly asks for another rounding mode).
+- Do not change the numbers from plan results. If a result includes explicit numeric values, use them exactly.
+- If the question asks for a total and plan results include item values, compute and state the total explicitly.
 
 Answer-shape constraints:
 - If the question is yes/no or "would it have cost more", start with a direct yes/no answer.

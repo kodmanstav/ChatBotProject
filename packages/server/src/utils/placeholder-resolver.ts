@@ -19,7 +19,8 @@ export type ResolveStepParametersOptions = {
  */
 export function extractFirstNumberFromText(str: string): string | null {
    if (str == null || typeof str !== 'string') return null;
-   const m = str.match(/\$?\s*([\d,]+(?:\.\d+)?)/);
+   // Avoid matching numbers embedded in product/model names (e.g. "G7").
+   const m = str.match(/(?:^|[^A-Za-z0-9])\$?\s*([\d,]+(?:\.\d+)?)/);
    const group = m?.[1];
    if (group == null) return null;
    try {
@@ -117,6 +118,16 @@ function resolveString(
       }
       const resultObj = stepResult as Record<string, unknown>;
       if (!path) {
+         // In math expressions, bare {{steps.N.result}} should prefer numeric value.
+         if (useNumericFallback) {
+            const valueField = resultObj.value;
+            if (
+               typeof valueField === 'number' ||
+               (typeof valueField === 'string' && isNumericString(valueField))
+            ) {
+               return String(valueField);
+            }
+         }
          return typeof resultObj === 'object'
             ? JSON.stringify(resultObj)
             : String(resultObj);
@@ -125,7 +136,32 @@ function resolveString(
       let current: unknown = resultObj;
       for (const k of keys) {
          if (current == null || typeof current !== 'object') return '';
-         current = (current as Record<string, unknown>)[k];
+         const currentObj = current as Record<string, unknown>;
+         if (k in currentObj) {
+            current = currentObj[k];
+            continue;
+         }
+
+         // Helpful fallback for catalog totals:
+         // {{steps.N.result.prices}} -> list of numeric item values when present.
+         if (k === 'prices' && Array.isArray(currentObj.items)) {
+            const nums = currentObj.items
+               .map((it) => {
+                  if (it == null || typeof it !== 'object') return null;
+                  const v = (it as Record<string, unknown>).value;
+                  return typeof v === 'number'
+                     ? v
+                     : typeof v === 'string' && isNumericString(v)
+                       ? Number(v)
+                       : null;
+               })
+               .filter((n): n is number => n != null);
+            // Return arithmetic-friendly list (e.g. "79+1499+199+249")
+            // so totals can be evaluated without custom functions.
+            current = nums.join('+');
+            continue;
+         }
+         return '';
       }
       let replacement = current != null ? String(current) : '';
 

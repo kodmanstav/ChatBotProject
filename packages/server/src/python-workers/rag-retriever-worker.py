@@ -542,13 +542,11 @@ def simulate_retrieval(collection, parameters: dict) -> dict:
         requested_section = detect_requested_section_key(q_str, section_keys)
         if requested_section is not None:
             items = build_catalog_field_items(products, requested_section)
-            total_value = None
-            if is_total_cost_question(q_str):
-                numeric_values = [
-                    float(row["value"]) for row in items if isinstance(row.get("value"), (int, float))
-                ]
-                if numeric_values:
-                    total_value = sum(numeric_values)
+            numeric_values = [
+                float(row["value"]) for row in items if isinstance(row.get("value"), (int, float))
+            ]
+            total_value = sum(numeric_values) if numeric_values else None
+            include_total = is_total_cost_question(q_str) or requested_section == "price"
             return {
                 "retrieved_context": build_product_section_catalog_text(
                     products, requested_section
@@ -560,7 +558,8 @@ def simulate_retrieval(collection, parameters: dict) -> dict:
                 },
                 "query": q_str,
                 "items": items,
-                **({"total_value": total_value} if total_value is not None else {}),
+                **({"prices": numeric_values} if numeric_values else {}),
+                **({"total_value": total_value} if include_total and total_value is not None else {}),
             }
         return {
             "retrieved_context": build_product_catalog_text(products),
