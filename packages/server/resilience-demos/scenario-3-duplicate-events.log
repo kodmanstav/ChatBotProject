@@ -9,6 +9,8 @@
 #    second delivery is ignored (no second ToolInvocationResulted).
 
 router-1                | [2026-04-26T22:56:34.599+03:00] [Router] Received user query for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
+router-1                | [2026-04-26T22:57:03.956+03:00] [Router] Raw generated plan: { "plan":[{"step":1,"tool":"calculateMath","parameters":{"expression":"7 + 8"}}], "final_answer_synthesis_required": false }
+router-1                | [2026-04-26T22:57:03.957+03:00] [Router] Generated plan with 1 step(s)
 router-1                | [2026-04-26T22:57:03.961+03:00] [Router] Published PlanGenerated for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
 orchestrator-1          | [2026-04-26T22:57:03.967+03:00] [Orchestrator] Initialized state for conversation d41e8a57-950d-49c6-afed-0ad45940a7c0
 math-worker-1           | [2026-04-26T22:57:03.972+03:00] [Math Worker] Received ToolInvocationRequested conversationId=d41e8a57-950d-49c6-afed-0ad45940a7c0 step=1 tool=calculateMath
@@ -19,3 +21,5 @@ orchestrator-1          | [2026-04-26T22:57:04.020+03:00] [Orchestrator] Plan co
 # {"eventType":"ToolInvocationRequested","conversationId":"d41e8a57-950d-49c6-afed-0ad45940a7c0","timestamp":"2026-04-26T19:57:03.967Z","payload":{"step":1,"tool":"calculateMath","parameters":{"expression":"7 + 8"}}}
 
 math-worker-1           | [2026-04-26T23:00:12.919+03:00] [Math Worker] Skipping duplicate conversationId=d41e8a57-950d-49c6-afed-0ad45940a7c0 step=1 tool=calculateMath
+synthesis-worker-1      | [2026-04-26T22:57:04.035+03:00] [Synthesis Worker] incoming planResults: { "1":{"expression":"7 + 8","value":15} }
+synthesis-worker-1      | [2026-04-26T22:57:05.389+03:00] [Synthesis Worker] finalAnswer: The result of the expression 7 + 8 is 15.

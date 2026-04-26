@@ -10,6 +10,18 @@ This folder contains **real logs captured from actual runs** of Docker Compose (
 
 Each `.log` file includes lines that start with `#` as reviewer notes. All other lines are raw `docker compose logs` output (`service | message`).
 
+## Additional Demo Logs
+
+The following files were added for extra presentation scenarios (complex orchestration + RAG):
+
+| File | Scenario |
+|------|----------|
+| [orchestration-complex-1.log](./orchestration-complex-1.log) | 3-step chain: `getExchangeRate` -> `calculateMath` -> `calculateMath` |
+| [orchestration-complex-2.log](./orchestration-complex-2.log) | 3-step chain: `getWeather` -> `getExchangeRate` -> `calculateMath` |
+| [orchestration-complex-3.log](./orchestration-complex-3.log) | 3-step chain: `getProductInformation` -> `getExchangeRate` -> `calculateMath` |
+| [rag-scenario-1.log](./rag-scenario-1.log) | RAG catalog retrieval (`answer_type: catalog`) |
+| [rag-scenario-2.log](./rag-scenario-2.log) | RAG price retrieval + follow-up math aggregation (`answer_type: catalog_field`) |
+
 ---
 
 ## Environment

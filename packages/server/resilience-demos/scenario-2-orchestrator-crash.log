@@ -10,6 +10,8 @@
 # State path (host bind mount): packages/server/.orchestrator-state/ (LevelDB) – see state-store.service.ts
 
 router-1                | [2026-04-26T22:53:41.342+03:00] [Router] Received user query for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
+router-1                | [2026-04-26T22:54:14.923+03:00] [Router] Raw generated plan: { "plan":[{"step":1,"tool":"getExchangeRate","parameters":{"from":"USD","to":"ILS"}},{"step":2,"tool":"calculateMath","parameters":{"expression":"100 * {{steps.1.result.rate}}"}},{"step":3,"tool":"calculateMath","parameters":{"expression":"{{steps.2.result}} * 5"}}], "final_answer_synthesis_required": true }
+router-1                | [2026-04-26T22:54:14.923+03:00] [Router] Generated plan with 3 step(s)
 router-1                | [2026-04-26T22:54:15.014+03:00] [Router] Published PlanGenerated for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
 orchestrator-1          | [2026-04-26T22:54:15.111+03:00] [Orchestrator] Initialized state for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
 orchestrator-1          | [2026-04-26T22:54:15.450+03:00] [Orchestrator] Dispatching step 1 -> getExchangeRate
@@ -29,3 +31,5 @@ orchestrator-1          | [2026-04-26T22:55:17.535+03:00] [Orchestrator] Dispatc
 math-worker-1           | [2026-04-26T22:55:17.536+03:00] [Math Worker] Received ToolInvocationRequested conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=3 tool=calculateMath
 math-worker-1           | [2026-04-26T22:55:17.541+03:00] [Math Worker] Published ToolInvocationResulted conversationId=e52e6399-d264-4659-ac1f-cc4858a816e1 step=3 tool=calculateMath
 orchestrator-1          | [2026-04-26T22:55:17.577+03:00] [Orchestrator] Plan completed for conversation e52e6399-d264-4659-ac1f-cc4858a816e1
+synthesis-worker-1      | [2026-04-26T22:55:17.588+03:00] [Synthesis Worker] incoming planResults: { "1":{"from":"USD","to":"ILS","rate":3.7}, "2":{"expression":"100 * 3.7","value":370}, "3":{"expression":"0","value":0} }
+synthesis-worker-1      | [2026-04-26T22:55:18.765+03:00] [Synthesis Worker] finalAnswer: The exchange rate from USD to ILS is 3.7. Therefore, converting 100 USD would give you 370 ILS.
