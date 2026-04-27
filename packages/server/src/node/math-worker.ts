@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import { createKafkaClient, TOPICS } from '../kafka/client';
 import { runConsumer } from '../kafka/consumer';
 import { publishValidated } from '../kafka/producer';
@@ -17,6 +18,8 @@ function isToolRequest(payload: unknown): payload is {
    if (payload == null || typeof payload !== 'object') return false;
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'ToolInvocationRequested') return false;
+   if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    const p = o.payload;
    if (p == null || typeof p !== 'object') return false;
    return (p as Record<string, unknown>).tool === TOOL_NAME;
@@ -24,9 +27,10 @@ function isToolRequest(payload: unknown): payload is {
 
 function calculate(expression: string): number | null {
    const trimmed = String(expression).replace(/\s+/g, '').trim();
-   if (!/^[\d\s+\-*/().]+$/.test(trimmed)) return null;
+   if (!/^[\d+\-*/().]+$/.test(trimmed)) return null;
    try {
-      return Function(`"use strict"; return (${trimmed})`)() as number;
+      const value = Function(`"use strict"; return (${trimmed})`)() as unknown;
+      return typeof value === 'number' && Number.isFinite(value) ? value : null;
    } catch {
       return null;
    }

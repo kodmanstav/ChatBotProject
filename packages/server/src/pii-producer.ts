@@ -1,3 +1,4 @@
+import './utils/console-timestamp';
 import readline from 'node:readline';
 import { randomUUID } from 'node:crypto';
 import { Kafka, type Producer } from 'kafkajs';

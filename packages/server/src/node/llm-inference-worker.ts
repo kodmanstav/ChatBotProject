@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import { createKafkaClient, TOPICS } from '../kafka/client';
 import { runConsumer } from '../kafka/consumer';
 import { publishValidated } from '../kafka/producer';
@@ -26,6 +27,7 @@ function isToolInvocationRequested(payload: unknown): payload is {
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'ToolInvocationRequested') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return (

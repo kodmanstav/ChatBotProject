@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import { createKafkaClient, TOPICS } from '../kafka/client';
 import { runConsumer } from '../kafka/consumer';
 import { publishValidated } from '../kafka/producer';
@@ -10,6 +11,48 @@ const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
 const CONSUMER_GROUP = 'synthesis-worker-group';
 
 const synthesizedConversations = new Set<string>();
+
+function enrichPlanResults(
+   planResults: Record<string, unknown>
+): Record<string, unknown> {
+   const enriched: Record<string, unknown> = {};
+
+   for (const [key, raw] of Object.entries(planResults ?? {})) {
+      if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) {
+         enriched[key] = raw;
+         continue;
+      }
+
+      const obj = { ...(raw as Record<string, unknown>) };
+      const items = obj.items;
+      const hasTotal =
+         typeof obj.total_value === 'number' &&
+         Number.isFinite(obj.total_value);
+
+      if (Array.isArray(items) && !hasTotal) {
+         const nums = items
+            .map((it) => {
+               if (it == null || typeof it !== 'object') return null;
+               const v = (it as Record<string, unknown>).value;
+               if (typeof v === 'number' && Number.isFinite(v)) return v;
+               if (typeof v === 'string') {
+                  const n = Number(v);
+                  return Number.isFinite(n) ? n : null;
+               }
+               return null;
+            })
+            .filter((n): n is number => n != null);
+         if (nums.length > 0) {
+            const total = nums.reduce((acc, n) => acc + n, 0);
+            obj.total_value = total;
+         }
+      }
+
+      enriched[key] = obj;
+   }
+
+   return enriched;
+}
 
 function buildFinalAnswerFromPlanResults(
    planResults: Record<string, unknown>
@@ -62,7 +105,7 @@ async function main(): Promise<void> {
       groupId: CONSUMER_GROUP,
       onMessage: async (payload) => {
          if (!isSynthesizeRequest(payload)) return;
-         const { conversationId, timestamp, payload: pl } = payload;
+         const { conversationId, payload: pl } = payload;
          const planResults = pl.planResults;
 
          if (synthesizedConversations.has(conversationId)) {
@@ -87,7 +130,8 @@ async function main(): Promise<void> {
 
          let finalAnswer: string;
          try {
-            const text = JSON.stringify(planResults, null, 2);
+            const enrichedPlanResults = enrichPlanResults(planResults);
+            const text = JSON.stringify(enrichedPlanResults, null, 2);
             console.log('[Synthesis] Using OpenAI');
             const openAiAnswer = await callOpenAI([
                { role: 'system', content: ORCHESTRATION_SYNTHESIS_PROMPT },
@@ -99,7 +143,8 @@ async function main(): Promise<void> {
             if (openAiAnswer && openAiAnswer.trim()) {
                finalAnswer = openAiAnswer.trim();
             } else {
-               finalAnswer = buildFinalAnswerFromPlanResults(planResults);
+               finalAnswer =
+                  buildFinalAnswerFromPlanResults(enrichedPlanResults);
             }
          } catch (err) {
             console.error('[Synthesis Worker] OpenAI error:', err);

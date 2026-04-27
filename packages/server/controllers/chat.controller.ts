@@ -22,7 +22,10 @@ export const chatController = {
          const { prompt, conversationId } = req.body;
          const response = await chatService.sendMessage(prompt, conversationId);
 
-         res.json({ message: response.message });
+         res.json({
+            message: response.message,
+            latencyMs: response.latencyMs,
+         });
       } catch (error) {
          res.status(500).json({ error: 'Failed to generate a response.' });
       }

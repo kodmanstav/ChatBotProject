@@ -16,8 +16,25 @@ from kafka.structs import OffsetAndMetadata, TopicPartition
 import chromadb
 from chromadb.utils import embedding_functions
 
-logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+logging.getLogger().handlers.clear()
+logging.getLogger().setLevel(logging.CRITICAL)
+
 logger = logging.getLogger(__name__)
+logger.handlers.clear()
+logger.setLevel(logging.INFO)
+logger.propagate = False
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+
+
+class LocalTimeFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        return datetime.now().astimezone().isoformat(timespec="milliseconds")
+
+
+handler.setFormatter(LocalTimeFormatter("%(asctime)s %(message)s"))
+logger.addHandler(handler)
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BROKERS", "localhost:9092")
 CONSUME_TOPIC = "tool-invocation-requests"
@@ -46,6 +63,17 @@ def already_processed(conversation_id: str, step: int, tool: str) -> bool:
 
 def mark_processed(conversation_id: str, step: int, tool: str) -> None:
     PROCESSED.add(idempotency_key(conversation_id, step, tool))
+
+
+def build_offset_metadata(offset: int) -> OffsetAndMetadata:
+    """
+    Build OffsetAndMetadata across kafka-python versions.
+    Newer versions require leader_epoch as a 3rd argument.
+    """
+    try:
+        return OffsetAndMetadata(offset, "", -1)
+    except TypeError:
+        return OffsetAndMetadata(offset, "")
 
 
 # --- ChromaDB helpers --------------------------------------------------------
@@ -150,72 +178,332 @@ def index_products_if_needed(collection) -> None:
     collection.add(ids=new_ids, documents=new_texts, metadatas=new_metadatas)
 
 
-def retrieve_product_from_chroma(collection, query: str) -> dict | None:
+def retrieve_products_from_chroma(collection, query: str, n_results: int = 3) -> list[dict]:
     """
-    Given a query string, return the best matching product from Chroma.
+    Given a query string, return top matching products from Chroma.
     """
     q = (query or "").strip()
     if not q:
-        return None
+        return []
 
     try:
-        res = collection.query(query_texts=[q], n_results=1)
+        res = collection.query(query_texts=[q], n_results=max(1, n_results))
     except Exception as e:  # pragma: no cover
         logger.exception("[RAG Worker] Chroma query failed: %s", e)
-        return None
+        return []
 
     ids = res.get("ids") or []
     docs = res.get("documents") or []
     metas = res.get("metadatas") or []
 
     if not ids or not ids[0]:
+        return []
+
+    hits: list[dict] = []
+    for i in range(len(ids[0])):
+        text = docs[0][i] if docs and docs[0] and i < len(docs[0]) else ""
+        meta = metas[0][i] if metas and metas[0] and i < len(metas[0]) else {}
+        hits.append({"text": text, "metadata": meta})
+
+    return hits
+
+
+def retrieve_products_from_files(query: str, max_results: int = 3) -> list[dict]:
+    """
+    Fallback retrieval without embeddings startup.
+    Scores local product files by keyword overlap and returns top matches.
+    """
+    products = load_product_files()
+    if not products:
+        return []
+
+    q = (query or "").lower()
+    tokens = [t for t in q.replace("-", " ").split() if len(t) > 2]
+    scored: list[tuple[int, dict]] = []
+
+    for item in products:
+        text = (item.get("text") or "").lower()
+        title = str((item.get("metadata") or {}).get("title") or "").lower()
+        score = 0
+
+        for token in tokens:
+            if token in title:
+                score += 3
+            if token in text:
+                score += 1
+
+        if not tokens:
+            score = 1
+
+        scored.append((score, item))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = [item for score, item in scored if score > 0][: max(1, max_results)]
+
+    return [
+        {
+            "text": item.get("text") or "",
+            "metadata": {**(item.get("metadata") or {}), "source": "local-files-fallback"},
+        }
+        for item in top
+    ]
+
+
+def extract_first_number(text: str) -> float | None:
+    """
+    Extract first numeric value from text.
+    Generic helper for any numeric field (price, battery hours, etc).
+    """
+    import re
+
+    if not text:
         return None
 
-    text = docs[0][0] if docs and docs[0] else ""
-    meta = metas[0][0] if metas and metas[0] else {}
+    m = re.search(r"([0-9][0-9,]*(?:\.[0-9]+)?)", text)
+    if not m:
+        return None
+    raw = m.group(1).replace(",", "")
+    try:
+        return float(raw)
+    except ValueError:
+        return None
 
-    return {"text": text, "metadata": meta}
+
+def normalize_field_key(raw_key: str) -> str:
+    k = (raw_key or "").strip().lower()
+    return "_".join(part for part in k.replace("-", " ").split() if part)
 
 
-def is_price_question(query: str) -> bool:
+def parse_sections(text: str) -> dict[str, str]:
     """
-    Heuristic check: is the user asking specifically about the price/cost?
+    Parse simple "Section:" blocks from product text into a dictionary.
+    Example keys: description, features, battery, compatibility, price.
+    """
+    sections: dict[str, str] = {}
+    current_key: str | None = None
+    buffer: list[str] = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if line.endswith(":") and len(line) > 1 and line[:-1].strip():
+            if current_key is not None:
+                sections[current_key] = "\n".join(buffer).strip()
+            current_key = normalize_field_key(line[:-1])
+            buffer = []
+            continue
+        if current_key is not None:
+            buffer.append(raw_line)
+
+    if current_key is not None:
+        sections[current_key] = "\n".join(buffer).strip()
+
+    return {k: v for k, v in sections.items() if v}
+
+
+def detect_requested_section_key(query: str, section_keys: list[str]) -> str | None:
+    """
+    Try to infer which section is requested by the query, based on section keys.
+    """
+    q = (query or "").lower().replace("-", " ")
+    q_tokens_raw = [t for t in q.split() if len(t) > 1]
+    q_tokens = []
+    for t in q_tokens_raw:
+        q_tokens.append(t)
+        if len(t) > 3 and t.endswith("s"):
+            q_tokens.append(t[:-1])  # simple plural -> singular normalization
+    if not q_tokens or not section_keys:
+        return None
+
+    section_aliases: dict[str, list[str]] = {
+        "price": ["price", "prices", "cost", "costs", "how much", "כמה", "מחיר", "מחירים"],
+        "features": ["feature", "features", "spec", "specs", "capabilities", "מאפיינים", "תכונות"],
+        "battery": ["battery", "power", "סוללה", "חיי סוללה"],
+        "compatibility": ["compatibility", "compatible", "support", "works with", "תאימות", "תומך"],
+        "description": ["description", "details", "overview", "about", "תיאור", "פרטים"],
+    }
+
+    scored: list[tuple[int, str]] = []
+    for key in section_keys:
+        key_norm = key.replace("_", " ").lower()
+        key_tokens = [t for t in key_norm.split() if len(t) > 2]
+        score = 0
+        for token in q_tokens:
+            if token in key_tokens:
+                score += 2
+            elif token in key_norm:
+                score += 1
+            elif any(token in kt or kt in token for kt in key_tokens):
+                score += 1
+
+        aliases = section_aliases.get(key, [])
+        q_joined = " ".join(q_tokens)
+        for alias in aliases:
+            alias_norm = alias.lower()
+            if alias_norm in q_joined:
+                score += 2
+        if score > 0:
+            scored.append((score, key))
+
+    if not scored:
+        return None
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return scored[0][1]
+
+
+def extract_focus_field_from_query(text: str, query: str) -> tuple[str, str] | None:
+    """
+    Try to map user query to a relevant section from the product text.
+    This is generic and not tied to a single category.
+    """
+    sections = parse_sections(text)
+    if not sections:
+        return None
+
+    q = (query or "").lower()
+    q_tokens = [t for t in q.replace("-", " ").split() if len(t) > 2]
+    if not q_tokens:
+        return None
+
+    requested = detect_requested_section_key(q, list(sections.keys()))
+    if requested is None:
+        return None
+    value = sections.get(requested)
+    if not value:
+        return None
+    return requested, value
+
+
+def is_catalog_question(query: str) -> bool:
+    """
+    Heuristic check: is the user asking for available products/list/catalog?
     Supports simple English + a bit of Hebrew.
     """
     q = (query or "").lower()
     keywords = [
-        "price",
-        "how much",
-        "cost",
-        "כמה",
-        "מה המחיר",
+        "all products",
+        "all the products",
+        "all your products",
+        "products you have",
+        "what products",
+        "which products",
+        "list products",
+        "available products",
+        "catalog",
+        "show products",
+        "what do you have",
+        "איזה מוצרים",
+        "אילו מוצרים",
+        "כל המוצרים",
+        "כל המוצרים שיש",
+        "רשימת מוצרים",
+        "מה יש לכם",
     ]
     return any(kw in q for kw in keywords)
 
 
-def extract_price_line(text: str) -> str | None:
+def is_total_cost_question(query: str) -> bool:
+    q = (query or "").lower()
+    keywords = [
+        "total",
+        "sum",
+        "altogether",
+        "overall",
+        "total cost",
+        "כמה יעלה הכל",
+        "סך הכל",
+        "עלות כוללת",
+        "מחיר כולל",
+    ]
+    return any(kw in q for kw in keywords)
+
+
+def extract_number_from_money_text(text: str) -> float | None:
+    return extract_first_number(text)
+
+
+def build_product_catalog_text(products: list[dict]) -> str:
     """
-    Given a product description text, try to extract the price line.
-    Assumes a structure like:
-
-    Price:
-    Starting at $1,499
+    Build a user-facing product list from local product files.
     """
-    lines = text.splitlines()
-    # Look for a "Price:" section, then take the first non-empty line after it
-    for i, line in enumerate(lines):
-        if line.strip().lower().startswith("price:"):
-            for j in range(i + 1, len(lines)):
-                candidate = lines[j].strip()
-                if candidate:
-                    return candidate
+    if not products:
+        return "No product data available."
 
-    # Fallback: search for a line containing a dollar sign
-    for line in lines:
-        if "$" in line:
-            return line.strip()
+    titles = []
+    for item in products:
+        title = str((item.get("metadata") or {}).get("title") or "").strip()
+        if title:
+            titles.append(title)
+    if not titles:
+        return "No product data available."
 
-    return None
+    lines = [f"- {title}" for title in sorted(set(titles))]
+    return "Available products:\n" + "\n".join(lines)
+
+
+def build_product_section_catalog_text(products: list[dict], section_key: str) -> str:
+    """
+    Build a user-facing list for a specific section across all products.
+    """
+    if not products:
+        return "No product data available."
+
+    lines = []
+    for item in products:
+        text = str(item.get("text") or "")
+        title = str((item.get("metadata") or {}).get("title") or "").strip()
+        if not title:
+            continue
+
+        sections = parse_sections(text)
+        section_value = sections.get(section_key)
+        if section_value:
+            one_line = section_value.splitlines()[0].strip()
+            lines.append(f"- {title}: {one_line if one_line else section_value}")
+        else:
+            lines.append(f"- {title}: {section_key} not available")
+
+    if not lines:
+        return "No product data available."
+
+    label = section_key.replace("_", " ")
+    return f"Available product {label}:\n" + "\n".join(sorted(set(lines)))
+
+
+def build_catalog_field_items(products: list[dict], section_key: str) -> list[dict]:
+    items: list[dict] = []
+    for item in products:
+        text = str(item.get("text") or "")
+        title = str((item.get("metadata") or {}).get("title") or "").strip()
+        if not title:
+            continue
+        sections = parse_sections(text)
+        section_value = sections.get(section_key)
+        if not section_value:
+            continue
+        numeric = extract_number_from_money_text(section_value)
+        row = {"title": title, "value_text": section_value}
+        if numeric is not None:
+            row["value"] = numeric
+        items.append(row)
+    return items
+
+
+def build_multi_product_context(hits: list[dict], max_chars_per_product: int = 900) -> str:
+    """
+    Build a compact context from multiple product matches.
+    """
+    if not hits:
+        return "No product data available."
+
+    chunks = []
+    for idx, hit in enumerate(hits, start=1):
+        text = str(hit.get("text") or "").strip()
+        meta = hit.get("metadata") or {}
+        title = str(meta.get("title") or f"Product {idx}").strip()
+        excerpt = text[:max_chars_per_product].strip()
+        chunks.append(f"Product match {idx}: {title}\n{excerpt}")
+
+    return "\n\n---\n\n".join(chunks)
 
 
 def parse_message(value: bytes) -> dict | None:
@@ -226,6 +514,9 @@ def parse_message(value: bytes) -> dict | None:
         if data.get("eventType") != "ToolInvocationRequested":
             return None
         if "conversationId" not in data or "payload" not in data:
+            return None
+        ts = data.get("timestamp")
+        if not isinstance(ts, str) or not ts.strip():
             return None
         payload = data["payload"]
         if not isinstance(payload, dict) or payload.get("tool") != TOOL_NAME:
@@ -242,25 +533,84 @@ def simulate_retrieval(collection, parameters: dict) -> dict:
     query = parameters.get("query") or parameters.get("q") or "product"
     q_str = str(query)
 
-    hit = retrieve_product_from_chroma(collection, q_str)
-    if hit is None:
+    if is_catalog_question(q_str):
+        products = load_product_files()
+        section_keys = sorted(
+            {
+                key
+                for p in products
+                for key in parse_sections(str(p.get("text") or "")).keys()
+            }
+        )
+        requested_section = detect_requested_section_key(q_str, section_keys)
+        if requested_section is not None:
+            items = build_catalog_field_items(products, requested_section)
+            numeric_values = [
+                float(row["value"]) for row in items if isinstance(row.get("value"), (int, float))
+            ]
+            total_value = sum(numeric_values) if numeric_values else None
+            include_total = is_total_cost_question(q_str) or requested_section == "price"
+            return {
+                "retrieved_context": build_product_section_catalog_text(
+                    products, requested_section
+                ),
+                "metadata": {
+                    "answer_type": "catalog_field",
+                    "field": requested_section,
+                    "source": "local-files-fallback",
+                },
+                "query": q_str,
+                "items": items,
+                **({"prices": numeric_values} if numeric_values else {}),
+                **({"total_value": total_value} if include_total and total_value is not None else {}),
+            }
+        return {
+            "retrieved_context": build_product_catalog_text(products),
+            "metadata": {"answer_type": "catalog", "source": "local-files-fallback"},
+            "query": q_str,
+        }
+
+    hits: list[dict] = []
+    if collection is not None:
+        hits = retrieve_products_from_chroma(collection, q_str, n_results=3)
+    if not hits:
+        hits = retrieve_products_from_files(q_str, max_results=3)
+    if not hits:
         retrieved = "No product data available."
         meta: dict = {}
     else:
-        full_text = hit.get("text") or ""
-        meta = hit.get("metadata") or {}
+        best = hits[0]
+        best_text = str(best.get("text") or "")
+        focused = extract_focus_field_from_query(best_text, q_str)
+        if focused is not None:
+            field_key, field_value = focused
+            best_meta = best.get("metadata") or {}
+            out = {
+                "retrieved_context": field_value,
+                "metadata": {
+                    **best_meta,
+                    "answer_type": "focused_field",
+                    "field": field_key,
+                },
+                "query": q_str,
+                field_key: field_value,
+            }
+            num = extract_first_number(field_value)
+            if num is not None:
+                out["value"] = num
+            return out
 
-        # If the user asks specifically for the price, try to return only the price line
-        if is_price_question(q_str):
-            price_line = extract_price_line(full_text)
-            if price_line:
-                retrieved = price_line
-                meta = {**meta, "answer_type": "price"}
-            else:
-                # Fallback: return full text if we couldn't safely extract a price
-                retrieved = full_text
-        else:
-            retrieved = full_text
+        retrieved = build_multi_product_context(hits)
+        titles = [
+            str((h.get("metadata") or {}).get("title") or "").strip()
+            for h in hits
+            if (h.get("metadata") or {}).get("title")
+        ]
+        meta = {
+            "answer_type": "product_context",
+            "matched_products": titles,
+            "match_count": len(hits),
+        }
 
     return {
         "retrieved_context": retrieved,
@@ -283,9 +633,20 @@ def main():
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    # Setup Chroma and index products once at startup
-    collection = get_chroma_collection()
-    index_products_if_needed(collection)
+    # Initialize Chroma + product indexing at startup.
+    # If initialization fails, keep serving with local-file fallback.
+    collection = None
+    try:
+        logger.info("[RAG Worker] Initializing Chroma collection: %s", CHROMA_COLLECTION)
+        collection = get_chroma_collection()
+        index_products_if_needed(collection)
+        logger.info("[RAG Worker] Chroma retrieval enabled")
+    except Exception as e:
+        collection = None
+        logger.warning(
+            "[RAG Worker] Chroma initialization failed, using local file fallback only: %s",
+            str(e),
+        )
 
     logger.info("[RAG Worker] Consuming %s for tool %s", CONSUME_TOPIC, TOOL_NAME)
 
@@ -343,7 +704,7 @@ def main():
                 TOOL_NAME,
             )
             tp = TopicPartition(CONSUME_TOPIC, message.partition)
-            consumer.commit(offsets={tp: OffsetAndMetadata(message.offset + 1, "")})
+            consumer.commit(offsets={tp: build_offset_metadata(message.offset + 1)})
         except Exception as e:
             logger.exception("[RAG Worker] Error: %s", e)
             ts = datetime.now(timezone.utc).isoformat()
@@ -373,7 +734,7 @@ def main():
                 str(e),
             )
             tp = TopicPartition(CONSUME_TOPIC, message.partition)
-            consumer.commit(offsets={tp: OffsetAndMetadata(message.offset + 1, "")})
+            consumer.commit(offsets={tp: build_offset_metadata(message.offset + 1)})
 
 
 if __name__ == "__main__":

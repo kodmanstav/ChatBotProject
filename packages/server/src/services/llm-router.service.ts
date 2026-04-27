@@ -12,67 +12,6 @@ function getOpenAI(): OpenAI | null {
    return apiKey ? new OpenAI({ apiKey }) : null;
 }
 
-function buildHeuristicPlan(userInput: string): Plan | null {
-   const text = userInput.trim();
-   if (!text) return null;
-
-   const lower = text.toLowerCase();
-
-   // Math-like expression: digits, operators, spaces, parentheses, optional question mark
-   const mathLike = /^[\d\s+\-*/().?]+$/.test(text);
-   if (mathLike) {
-      return {
-         plan: [
-            {
-               step: 1,
-               tool: 'calculateMath',
-               parameters: { expression: text.replace(/\?$/, '').trim() },
-            },
-         ],
-         final_answer_synthesis_required: false,
-      };
-   }
-
-   // Weather-related
-   if (
-      lower.includes('weather') ||
-      lower.includes('מזג האוויר') ||
-      lower.includes('מזג האויר')
-   ) {
-      return {
-         plan: [
-            {
-               step: 1,
-               tool: 'getWeather',
-               parameters: { location: text },
-            },
-         ],
-         final_answer_synthesis_required: false,
-      };
-   }
-
-   // Currency / exchange-related (very simple heuristic)
-   if (
-      lower.includes('exchange') ||
-      lower.includes('convert') ||
-      lower.includes('rate')
-   ) {
-      return {
-         plan: [
-            {
-               step: 1,
-               tool: 'getExchangeRate',
-               parameters: { from: 'USD', to: 'ILS' },
-            },
-         ],
-         final_answer_synthesis_required: false,
-      };
-   }
-
-   // Fallback: let downstream generalChat handle it if we don't have a better guess
-   return null;
-}
-
 function normalizePlanPayload(raw: unknown): Plan | null {
    if (raw == null || typeof raw !== 'object') return null;
    const o = raw as Record<string, unknown>;
@@ -118,6 +57,7 @@ async function callOllama(userInput: string): Promise<string> {
          body: JSON.stringify({
             model: OLLAMA_MODEL,
             stream: false,
+            options: { temperature: 0.1 },
             messages: [
                { role: 'system', content: ROUTER_SYSTEM_PROMPT.trim() },
                { role: 'user', content: userInput },
@@ -145,7 +85,7 @@ async function callOpenAI(userInput: string): Promise<string> {
          { role: 'system', content: ROUTER_SYSTEM_PROMPT.trim() },
          { role: 'user', content: userInput },
       ],
-      temperature: 0.2,
+      temperature: 0,
       max_tokens: 1024,
    });
    const content = resp.choices?.[0]?.message?.content?.trim();
@@ -158,18 +98,8 @@ async function callOpenAI(userInput: string): Promise<string> {
  * Returns normalized Plan or null if parsing/validation fails.
  */
 export async function generatePlan(userInput: string): Promise<Plan | null> {
-   // First, try simple rule-based routing so we don't depend on external LLMs
-   const heuristic = buildHeuristicPlan(userInput);
-   if (heuristic) {
-      return heuristic;
-   }
-
    let raw: string;
-   console.log('[LLM Router] Using Ollama for plan generation', {
-      url: OLLAMA_URL,
-      model: OLLAMA_MODEL,
-      timeoutMs: OLLAMA_TIMEOUT_MS,
-   });
+   console.log('[LLM Router] Using Ollama for plan generation');
    try {
       raw = await callOllama(userInput);
       console.log('[LLM Router] Plan from Ollama (success)');

@@ -19,6 +19,35 @@ export async function publishValidated(
    options: PublishOptions
 ): Promise<boolean> {
    const { topic, value, sendToDlqOnValidationFailure = true } = options;
+   const v = value as Record<string, unknown>;
+   if (
+      typeof v.conversationId !== 'string' ||
+      typeof v.timestamp !== 'string'
+   ) {
+      logError(
+         'publishValidated: event envelope must include string conversationId and timestamp'
+      );
+      if (sendToDlqOnValidationFailure) {
+         try {
+            await producer.send({
+               topic: TOPICS.DEAD_LETTER_QUEUE,
+               messages: [
+                  {
+                     value: JSON.stringify({
+                        raw: value,
+                        errors: [
+                           'Missing or invalid conversationId/timestamp on envelope',
+                        ],
+                     }),
+                  },
+               ],
+            });
+         } catch (e) {
+            logError('Failed to send envelope error to DLQ:', e);
+         }
+      }
+      return false;
+   }
    const result = validateEvent(value);
    if (!result.valid) {
       logError('Validation failed:', result.errors?.join('; '));

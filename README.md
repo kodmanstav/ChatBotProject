@@ -16,7 +16,7 @@ It combines:
 
 - 💻 **CLI interface** that allows users to type natural-language queries and receive AI responses
 
-The same architecture supports **product-information RAG flows**, **review analysis**, and **tool orchestration**, all connected through **Kafka topics** and **JSON-schema-validated events**.
+The same architecture supports **product-information RAG flows** and **tool orchestration**, all connected through **Kafka topics** and **JSON-schema-validated events**.
 
 ## 🧠 Project Overview
 
@@ -218,6 +218,8 @@ This will start:
 - Aggregator
 - Synthesis Worker
 - Python RAG Worker
+- Server API (`server`, port `3000`)
+- Frontend UI (`client`, port `5173`)
 
 All services run in the background.
 
@@ -259,6 +261,18 @@ To watch logs from all services in real time:
 
 ```docker compose logs -f```
 
+To watch logs from all running services except infrastructure noise (`kafka`, `zookeeper`, `ollama`):
+
+```powershell
+docker compose logs -f $(docker compose ps --services | Where-Object { $_ -notin @('kafka','zookeeper','ollama') })
+```
+
+If you also want to exclude `kafka-init`:
+
+```powershell
+docker compose logs -f $(docker compose ps --services | Where-Object { $_ -notin @('kafka','zookeeper','ollama','kafka-init') })
+```
+
 Example output:
 ```bash
 router-1           | Router received user query
@@ -285,6 +299,25 @@ The CLI:
 - Publishes ```UserQueryReceived```
 - Waits for ```FinalAnswerSynthesized```
 - Prints the final assistant response
+
+---
+
+### 5️⃣ Use the Frontend UI
+
+After `docker compose up -d`, the frontend is available at:
+
+- `http://localhost:5173`
+
+The frontend sends chat requests to:
+
+- `POST /api/chat` (proxied to `server:3000` inside Docker)
+
+Quick E2E check:
+
+1. Open `http://localhost:5173`
+2. Type a question in the chat input
+3. Verify the response appears in the chat window
+4. Optionally confirm API health at `http://localhost:3000/health`
 
 ## 🐳 Working with Docker
 
@@ -476,7 +509,7 @@ This is essential in Kafka‑based systems where retries or replays can deliver 
 This README centralizes:
 
 - A **visual architecture** of the event‑driven AI agent.
-- **Run instructions** for Kafka, Node services, Python workers, and the CLI.
+- **Run instructions** for Kafka, Node services, Python workers, CLI, and frontend UI.
 - A detailed explanation of how **event sourcing** and **stateful stream processing** are applied using Kafka topics, the orchestrator, and workers.
 
 Use it together with:

@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import { createKafkaClient, TOPICS } from '../kafka/client';
 import { runConsumerMulti } from '../kafka/consumer';
 import { publishValidated } from '../kafka/producer';
@@ -22,6 +23,7 @@ function isPlanGenerated(payload: unknown): payload is PlanGeneratedEvent {
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'PlanGenerated') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return Array.isArray(p.plan);
@@ -34,6 +36,7 @@ function isToolInvocationResulted(
    const o = payload as Record<string, unknown>;
    if (o.eventType !== 'ToolInvocationResulted') return false;
    if (typeof o.conversationId !== 'string') return false;
+   if (typeof o.timestamp !== 'string') return false;
    if (o.payload == null || typeof o.payload !== 'object') return false;
    const p = o.payload as Record<string, unknown>;
    return typeof p.tool === 'string' && typeof p.success === 'boolean';
@@ -46,7 +49,8 @@ function isToolInvocationRequested(
    const o = payload as Record<string, unknown>;
    return (
       o.eventType === 'ToolInvocationRequested' &&
-      typeof o.conversationId === 'string'
+      typeof o.conversationId === 'string' &&
+      typeof o.timestamp === 'string'
    );
 }
 
@@ -132,6 +136,24 @@ async function publishPlanFailed(
    });
 }
 
+function withDegradedResult(
+   results: Record<string, unknown>,
+   failedStep: number,
+   reason: string,
+   tool?: string,
+   rawResult?: unknown
+): Record<string, unknown> {
+   return {
+      ...results,
+      __degraded: {
+         failedStep,
+         reason,
+         ...(tool ? { tool } : {}),
+         ...(rawResult !== undefined ? { rawResult } : {}),
+      },
+   };
+}
+
 async function main(): Promise<void> {
    const kafka = createKafkaClient('orchestrator');
    const producer = kafka.producer();
@@ -171,6 +193,20 @@ async function main(): Promise<void> {
             const plan = pl.plan;
             if (!plan.length) return;
 
+            const existingState = await stateStore.getPlanState(conversationId);
+            if (
+               existingState &&
+               (existingState.status === 'RUNNING' ||
+                  existingState.status === 'PENDING') &&
+               (existingState.dispatchedSteps.length > 0 ||
+                  Object.keys(existingState.results).length > 0)
+            ) {
+               console.log(
+                  `[Orchestrator] Skipping duplicate PlanGenerated for active conversation ${conversationId}`
+               );
+               return;
+            }
+
             const firstStep = plan[0];
             if (!firstStep) return;
 
@@ -190,6 +226,13 @@ async function main(): Promise<void> {
                state.results
             );
             if (resolved === null) {
+               const degraded = withDegradedResult(
+                  state.results,
+                  firstStep.step,
+                  'Placeholder resolution failed for first step',
+                  firstStep.tool
+               );
+               await publishPlanCompleted(producer, conversationId, degraded);
                await publishPlanFailed(
                   producer,
                   conversationId,
@@ -258,6 +301,14 @@ async function main(): Promise<void> {
             );
 
             if (!pl.success) {
+               const degraded = withDegradedResult(
+                  state.results,
+                  stepNum,
+                  'Tool invocation failed',
+                  pl.tool,
+                  pl.result
+               );
+               await publishPlanCompleted(producer, conversationId, degraded);
                await publishPlanFailed(
                   producer,
                   conversationId,
@@ -312,6 +363,13 @@ async function main(): Promise<void> {
                results
             );
             if (resolved === null) {
+               const degraded = withDegradedResult(
+                  state.results,
+                  nextStep.step,
+                  'Placeholder resolution failed',
+                  nextStep.tool
+               );
+               await publishPlanCompleted(producer, conversationId, degraded);
                await publishPlanFailed(
                   producer,
                   conversationId,

@@ -1,3 +1,4 @@
+import '../utils/console-timestamp';
 import { createKafkaClient, TOPICS } from '../kafka/client';
 import { runConsumer } from '../kafka/consumer';
 import { publishValidated } from '../kafka/producer';
@@ -8,6 +9,10 @@ import type { PlanGeneratedEvent } from '../types/events';
 const USER_COMMANDS_TOPIC = TOPICS.USER_COMMANDS;
 const CONVERSATION_EVENTS_TOPIC = TOPICS.CONVERSATION_EVENTS;
 const CONSUMER_GROUP = 'router-group-debug';
+const RECENT_PLAN_TTL_MS =
+   Number(process.env.ROUTER_RECENT_PLAN_TTL_MS) || 120_000;
+const inFlightConversations = new Set<string>();
+const recentlyPlannedConversations = new Map<string, number>();
 
 type GeneratedPlan = {
    plan: Array<{
@@ -90,6 +95,54 @@ function isValidPlan(plan: unknown): plan is GeneratedPlan {
    return true;
 }
 
+function sanitizeMathExpression(raw: string): string | null {
+   const trimmed = raw.trim();
+   if (!trimmed) return null;
+
+   // Keep expressions stable but normalize whitespace.
+   const normalized = trimmed.replace(/\s+/g, ' ').trim();
+
+   // Allow placeholders used by orchestration plus arithmetic tokens.
+   // Support both {{steps.N.result}} and nested paths (e.g. .result.rate).
+   const placeholderSafe = normalized.replace(
+      /\{\{\s*steps\.\d+\.result(?:\.[a-zA-Z0-9_]+)*\s*\}\}/g,
+      '1'
+   );
+
+   if (!/^[\d+\-*/().,\s]+$/.test(placeholderSafe)) return null;
+   return normalized;
+}
+
+function normalizePlan(plan: GeneratedPlan): GeneratedPlan {
+   return {
+      ...plan,
+      plan: plan.plan.map((step) => {
+         const parameters: Record<string, unknown> = { ...step.parameters };
+
+         for (const [key, value] of Object.entries(parameters)) {
+            if (typeof value === 'string') {
+               parameters[key] = value.replace(
+                  /\{\{\s*steps\.(\d+)\.rate\s*\}\}/g,
+                  '{{steps.$1.result.rate}}'
+               );
+            }
+         }
+
+         if (step.tool === 'calculateMath') {
+            const expression = parameters.expression;
+            if (typeof expression === 'string') {
+               const sanitized = sanitizeMathExpression(expression);
+               parameters.expression = sanitized ?? '0';
+            } else {
+               parameters.expression = '0';
+            }
+         }
+
+         return { ...step, parameters };
+      }),
+   };
+}
+
 async function main(): Promise<void> {
    const kafka = createKafkaClient('router');
    const producer = kafka.producer();
@@ -134,95 +187,103 @@ async function main(): Promise<void> {
                return;
             }
 
-            console.log(
-               `[Router] Received user query for conversation ${conversationId}`
-            );
-            console.log(`[Router] User input: ${userInput}`);
-
-            let plan: GeneratedPlan | null = null;
-
-            try {
-               const generated = await generatePlan(userInput);
+            const now = Date.now();
+            const recentUntil =
+               recentlyPlannedConversations.get(conversationId) ?? 0;
+            if (recentUntil > now) {
                console.log(
-                  '[Router] Raw generated plan:',
-                  JSON.stringify(generated, null, 2)
+                  `[Router] Skipping duplicate query for conversation ${conversationId} (recently planned)`
                );
-
-               if (generated && isValidPlan(generated)) {
-                  plan = generated;
-               } else {
-                  logError('[Router] LLM returned invalid plan, skipping.');
-                  return;
-               }
-            } catch (err) {
-               logError('[Router] generatePlan failed, skipping.', err);
                return;
             }
-
-            if (!plan) return;
-
-            // Normalize old placeholder style like {{steps.1.rate}} -> {{steps.1.result.rate}}
-            try {
-               plan = {
-                  ...plan,
-                  plan: plan.plan.map((step) => ({
-                     ...step,
-                     parameters: Object.fromEntries(
-                        Object.entries(step.parameters).map(([key, value]) => {
-                           if (typeof value === 'string') {
-                              return [
-                                 key,
-                                 value.replace(
-                                    /\{\{\s*steps\.(\d+)\.rate\s*\}\}/g,
-                                    '{{steps.$1.result.rate}}'
-                                 ),
-                              ];
-                           }
-                           return [key, value];
-                        })
-                     ),
-                  })),
-               };
-            } catch (e) {
-               logError('[Router] Failed to normalize placeholders', e);
-            }
-
-            console.log(
-               `[Router] Generated plan with ${plan.plan.length} step(s)`
-            );
-            console.log('[Router] Final plan:', JSON.stringify(plan, null, 2));
-
-            const event: PlanGeneratedEvent = {
-               eventType: 'PlanGenerated',
-               conversationId,
-               timestamp: new Date().toISOString(),
-               payload: {
-                  plan: plan.plan,
-                  final_answer_synthesis_required:
-                     plan.final_answer_synthesis_required,
-               },
-            };
-
-            const ok = await publishValidated(producer, {
-               topic: CONVERSATION_EVENTS_TOPIC,
-               value: event,
-               sendToDlqOnValidationFailure: true,
-            });
-
-            if (ok) {
+            if (inFlightConversations.has(conversationId)) {
                console.log(
-                  `[Router] Published PlanGenerated for conversation ${conversationId}`
+                  `[Router] Skipping duplicate query for conversation ${conversationId} (already in progress)`
                );
-               logExecution('router', conversationId, 'PlanGenerated', {
-                  steps: plan.plan.length,
-                  tools: plan.plan.map((s) => s.tool),
-                  final_answer_synthesis_required:
-                     plan.final_answer_synthesis_required,
+               return;
+            }
+            inFlightConversations.add(conversationId);
+
+            try {
+               console.log(
+                  `[Router] Received user query for conversation ${conversationId}`
+               );
+               console.log(`[Router] User input: ${userInput}`);
+
+               let plan: GeneratedPlan | null = null;
+
+               try {
+                  const generated = await generatePlan(userInput);
+                  console.log(
+                     '[Router] Raw generated plan:',
+                     JSON.stringify(generated, null, 2)
+                  );
+
+                  if (generated && isValidPlan(generated)) {
+                     plan = generated;
+                  } else {
+                     logError('[Router] LLM returned invalid plan, skipping.');
+                     return;
+                  }
+               } catch (err) {
+                  logError('[Router] generatePlan failed, skipping.', err);
+                  return;
+               }
+
+               if (!plan) return;
+
+               try {
+                  plan = normalizePlan(plan);
+               } catch (e) {
+                  logError('[Router] Failed to normalize generated plan', e);
+               }
+
+               console.log(
+                  `[Router] Generated plan with ${plan.plan.length} step(s)`
+               );
+               console.log(
+                  '[Router] Final plan:',
+                  JSON.stringify(plan, null, 2)
+               );
+
+               const event: PlanGeneratedEvent = {
+                  eventType: 'PlanGenerated',
+                  conversationId,
+                  timestamp: new Date().toISOString(),
+                  payload: {
+                     plan: plan.plan,
+                     final_answer_synthesis_required:
+                        plan.final_answer_synthesis_required,
+                  },
+               };
+
+               const ok = await publishValidated(producer, {
+                  topic: CONVERSATION_EVENTS_TOPIC,
+                  value: event,
+                  sendToDlqOnValidationFailure: true,
                });
-            } else {
-               logError(
-                  `[Router] Failed to publish PlanGenerated for conversation ${conversationId}`
-               );
+
+               if (ok) {
+                  recentlyPlannedConversations.set(
+                     conversationId,
+                     Date.now() + RECENT_PLAN_TTL_MS
+                  );
+                  console.log(
+                     `[Router] Published PlanGenerated for conversation ${conversationId}`
+                  );
+                  logExecution('router', conversationId, 'PlanGenerated', {
+                     steps: plan.plan.length,
+                     tools: plan.plan.map((s) => s.tool),
+                     final_answer_synthesis_required:
+                        plan.final_answer_synthesis_required,
+                  });
+               } else {
+                  logError(
+                     `[Router] Failed to publish PlanGenerated for conversation ${conversationId}`
+                  );
+               }
+            } finally {
+               inFlightConversations.delete(conversationId);
             }
          } catch (err) {
             logError('[Router] Error while processing message:', err);
