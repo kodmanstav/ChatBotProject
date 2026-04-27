@@ -9,7 +9,7 @@ It combines:
 - 🟦 **Node.js / Bun backend** under `packages/server`  
   (router, orchestrator, workers, aggregator, synthesis)
 
-- 🐍 **Python workers** under `python-workers`  
+- 🐍 **Python workers** under `packages/server/src/python-workers`  
   (RAG / product information)
 
 - 📡 **Apache Kafka** as the event backbone and event store
@@ -101,7 +101,7 @@ flowchart TD
 
 ### 💻 CLI
 
-`packages/server/src/user-interface.ts`
+`packages/server/src/node/user-interface.ts`
 
 - Bun CLI interface
 - Publishes `UserQueryReceived`
@@ -111,7 +111,7 @@ flowchart TD
 
 ### 🧭 Router
 
-`packages/server/src/router.ts`
+`packages/server/src/node/router.ts`
 
 - Consumes `UserQueryReceived`
 - Infers a **plan**
@@ -121,7 +121,7 @@ flowchart TD
 
 ### ⚙️ Orchestrator
 
-`packages/server/src/orchestrator.ts`
+`packages/server/src/node/orchestrator.ts`
 
 Stateful plan runner that:
 
@@ -134,10 +134,14 @@ Stateful plan runner that:
 
 ### 🔧 Tool Workers
 
+Node-based workers live under `packages/server/src/node/`:
+
 - ➗ `math-worker.ts`
 - 🌦️ `weather-worker.ts`
 - 💱 `exchange-rate-worker.ts`
 - 🤖 `llm-inference-worker.ts`
+
+The RAG worker is implemented in Python (`packages/server/src/python-workers/rag-retriever-worker.py`).
 
 Each worker:
 
@@ -149,7 +153,7 @@ Each worker:
 
 ### 📦 Aggregator
 
-`packages/server/src/aggregator.ts`
+`packages/server/src/node/aggregator.ts`
 
 - Collects tool results
 - Emits `SynthesizeFinalAnswerRequested`
@@ -158,7 +162,7 @@ Each worker:
 
 ### ✨ Synthesis Worker
 
-`packages/server/src/synthesis-worker.ts`
+`packages/server/src/node/synthesis-worker.ts`
 
 - Builds the final AI answer
 - Emits `FinalAnswerSynthesized`
@@ -259,7 +263,9 @@ rag-worker               Up
 
 To watch logs from all services in real time:
 
-```docker compose logs -f```
+```bash
+docker compose logs -f
+```
 
 To watch logs from all running services except infrastructure noise (`kafka`, `zookeeper`, `ollama`):
 
@@ -282,7 +288,10 @@ weather-worker-1   | Fetching weather data
 rag-worker-1       | Running RAG retrieval
 ```
 To inspect logs from a specific service, for example router:
-```docker compose logs -f router```
+
+```bash
+docker compose logs -f router
+```
 
 ---
 ### 4️⃣ Launch the CLI
@@ -325,15 +334,21 @@ Quick E2E check:
 
 Restart a service **(if you modify a service)**:
 
-```docker compose restart router```
+```bash
+docker compose restart router
+```
 
 Stop a service:
 
-```docker compose stop router```
+```bash
+docker compose stop router
+```
 
 Start it again:
 
-```docker compose start router```
+```bash
+docker compose start router
+```
 
 ---
 
@@ -349,17 +364,26 @@ Use rebuild only if you changed:
 - requirements.txt
 
 Rebuild a specific service:
-```docker compose up -d --build router```
+
+```bash
+docker compose up -d --build router
+```
 
 Rebuild everything:
-```docker compose up -d --build```
+
+```bash
+docker compose up -d --build
+```
 
 ---
 
 ### Stop the system
 
 To stop all services:
-```docker compose down```
+
+```bash
+docker compose down
+```
 
 ---
 
@@ -383,6 +407,10 @@ docker compose up -d
 - **Weather advice:**  
   `I’m flying to London tomorrow, should I bring a coat?`
 
+### Knowledge base (RAG)
+
+Structured product copy lives under **`data/products/`** (plain text files). On startup, the Python RAG worker indexes new or changed files into its vector store (`index_products_if_needed` in `packages/server/src/python-workers/rag-retriever-worker.py`), so retrieval stays aligned with the catalog without a separate manual index step for routine runs.
+
 ## 📜 Inspecting the execution log
 
 High‑level execution traces are written to:
@@ -400,23 +428,32 @@ Each line looks like:
 
 This system applies **event sourcing** at the integration level: the behavior of the agent is driven by a stream of immutable Kafka events instead of direct RPC calls.
 
+### CQRS-style separation
+
+This design follows **CQRS** (Command Query Responsibility Segregation) at the messaging layer:
+
+- **Commands** (writes / intentions to change behavior) travel on **`user-commands`**: e.g. `UserQueryReceived` starts a flow; `SynthesizeFinalAnswerRequested` asks for final text generation after tools finished. Producers do not mutate shared DB rows directly—they append commands that services interpret.
+- **Queries / facts** materialize as **events** on **`conversation-events`**: `PlanGenerated`, `ToolInvocationResulted`, `PlanCompleted`, `FinalAnswerSynthesized`, etc. Consumers build read models (CLI output, logs, aggregator state) from this append-only stream.
+
+**Why this helps:** you can scale **writers** (router, orchestrator) and **read consumers** (UI, aggregation, analytics) independently; replay or audit the stream for debugging; and avoid tight synchronous coupling between components. The trade-off is higher operational complexity than a single monolithic API—see [Trade-offs and design choices](#trade-offs-and-design-choices).
+
 ### Core event types
 
-All events are JSON‑schema‑validated under `packages/server/schemas/**` and typed in `packages/server/src/types/events.ts`.
+All events are JSON‑schema‑validated under `packages/server/src/schemas/` (one `.schema.json` per event family) and typed in `packages/server/src/types/events.ts`.
 
 - **Commands (user‑facing, on `user-commands`):**
-   - `UserQueryReceived` – emitted by `user-interface.ts` for each line the user types.
-   - `SynthesizeFinalAnswerRequested` – emitted by `aggregator.ts` when a plan is completed and all tool results are collected.
+   - `UserQueryReceived` – emitted by `packages/server/src/node/user-interface.ts` for each line the user types.
+   - `SynthesizeFinalAnswerRequested` – emitted by `packages/server/src/node/aggregator.ts` when a plan is completed and all tool results are collected.
 
 - **Conversation events (on `conversation-events`):**
-   - `PlanGenerated` – emitted by `router.ts` after a plan is inferred.
+   - `PlanGenerated` – emitted by `packages/server/src/node/router.ts` after a plan is inferred.
    - `ToolInvocationResulted` – emitted by any tool worker after handling a `ToolInvocationRequested`.
-   - `PlanCompleted` – emitted by `orchestrator.ts` when all steps in the plan have succeeded.
-   - `PlanFailed` – emitted by `orchestrator.ts` when a step fails or placeholder resolution fails.
-   - `FinalAnswerSynthesized` – emitted by `synthesis-worker.ts` after building the final user answer.
+   - `PlanCompleted` – emitted by `packages/server/src/node/orchestrator.ts` when all steps in the plan have succeeded.
+   - `PlanFailed` – emitted by `packages/server/src/node/orchestrator.ts` when a step fails or placeholder resolution fails.
+   - `FinalAnswerSynthesized` – emitted by `packages/server/src/node/synthesis-worker.ts` after building the final user answer.
 
 - **Tool requests (on `tool-invocation-requests`):**
-   - `ToolInvocationRequested` – emitted by `orchestrator.ts` when it wants a specific tool (e.g. `getWeather`, `calculateMath`, `getProductInformation`, `generalChat`) to run.
+   - `ToolInvocationRequested` – emitted by `packages/server/src/node/orchestrator.ts` when it wants a specific tool (e.g. `getWeather`, `calculateMath`, `getProductInformation`, `generalChat`) to run.
 
 Any event that fails validation or that a component chooses not to process safely can be diverted to the **`dead-letter-queue`** topic.
 
@@ -451,12 +488,13 @@ Each of these transitions is an **immutable event** on a Kafka topic, and the sy
 While many workers are stateless, the **orchestrator** is a stateful stream processor:
 
 - It consumes a stream of `PlanGenerated` and `ToolInvocationResulted` events from `conversation-events`.
+- It also subscribes to **`tool-invocation-requests`** so it can record outbound requests and coordinate with its own dispatches.
 - It produces a stream of `ToolInvocationRequested`, `PlanCompleted`, and `PlanFailed` events.
-- It maintains **per‑conversation state** in memory, keyed by `conversationId`.
+- It maintains **per‑conversation state** keyed by `conversationId`, **persisted in LevelDB** (`packages/server/src/services/state-store.service.ts`, path configurable via `ORCHESTRATOR_STATE_PATH`) so a restart can resume in‑flight plans without losing step/results tracking.
 
 ### Plan state
 
-The `PlanState` type is defined in `packages/server/src/types/plan.ts` and stored via `services/state-store.service.ts`. For each `conversationId` it keeps:
+The `PlanState` type is defined in `packages/server/src/types/plan.ts` and stored via `packages/server/src/services/state-store.service.ts`. For each `conversationId` it keeps:
 
 - The `plan` (array of `PlanStep`).
 - Current `status` (`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`).
@@ -504,6 +542,29 @@ This is essential in Kafka‑based systems where retries or replays can deliver 
 
 ---
 
+## Trade-offs and design choices
+
+| Topic | Benefit | Cost / caveat |
+| ----- | ------- | ------------- |
+| **Kafka + topics** | Loose coupling, buffering under load, natural fan-out to many workers | Operating a broker cluster (even single-node Docker) and reasoning about offsets, lag, and consumer groups |
+| **Event sourcing style** | Audit trail, replay for debugging, clear causality between steps | More moving parts than a synchronous REST chain; harder “happy path” mental model for newcomers |
+| **CQRS-style topics** | Clear separation of command intake vs. published facts | Must keep schemas and contracts in sync across services |
+| **LevelDB orchestrator state** | Fast resume after process crash without replaying the entire topic from scratch | Derived state can diverge from a purely log-rebuilt model if not carefully managed; disk path must be mounted consistently in Docker |
+| **JSON Schema validation** | Safer evolution and invalid events routed to `dead-letter-queue` | Validation overhead and stricter publish discipline |
+| **Ollama + OpenAI fallback** | Local inference when possible; paid API when Ollama is slow/down | Two code paths and latency variability when timeouts trigger fallback |
+
+---
+
+## Future improvements
+
+- **Compaction / snapshots:** periodic snapshots or compacted topics for long-running deployments to bound replay time for new consumers.
+- **Observability:** OpenTelemetry traces across router → orchestrator → workers with correlation IDs already carried in `conversationId`.
+- **Security:** mutual TLS for Kafka in non-local environments; secrets management instead of plain `.env` in production.
+- **Scaling:** increase partition count and run multiple orchestrator/router instances with careful keying (today many topics use a single partition for simplicity).
+- **Stricter replay:** optional rebuild of orchestrator projection purely from `conversation-events` for disaster recovery audits (today LevelDB is the primary durability shortcut).
+
+---
+
 ## Benchmarking
 
 The following table is generated by the benchmark script (measured on your machine; values update when you re-run it). `OLLAMA_TIMEOUT_MS` does not inflate the **Ollama** rows: fallbacks to OpenAI are detected from service logs and excluded from those averages, and the Ollama run uses a 120s cap on the router/LLM workers only for the duration of the run.
@@ -516,7 +577,7 @@ cd packages/server
 $env:KAFKA_BROKERS="localhost:9092"   # PowerShell
 # export KAFKA_BROKERS=localhost:9092  # bash
 bun run benchmark
-# Optional: also patch this README from packages/server/benchmark output
+# Optional: inject the benchmark table into this README from measured output
 bun run benchmark -- --update-readme
 ```
 
@@ -552,9 +613,10 @@ This README centralizes:
 
 - A **visual architecture** of the event‑driven AI agent.
 - **Run instructions** for Kafka, Node services, Python workers, CLI, and frontend UI.
-- A detailed explanation of how **event sourcing** and **stateful stream processing** are applied using Kafka topics, the orchestrator, and workers.
+- A detailed explanation of how **event sourcing**, **CQRS-style command/event separation**, **trade-offs**, and **stateful stream processing** (orchestrator + LevelDB) are applied using Kafka topics and workers.
 
 Use it together with:
 
-- `packages/server/README.md` – lower‑level server instructions.
-- `packages/server/execution-log.txt` – concrete execution traces to demonstrate orchestration, RAG, and resilience scenarios.
+- `packages/server/resilience-demos/README.md` – captured **resilience demo logs** (worker crash, orchestrator crash, duplicate events) and related replay notes.
+- `packages/server/execution-log.txt` – concrete execution traces to demonstrate orchestration, RAG, and pipeline stages.
+- `packages/server/resilience-demos/benchmark/README.md` – notes on benchmark artifacts next to `benchmark.md` / raw JSON outputs.
