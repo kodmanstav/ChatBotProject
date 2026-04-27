@@ -16,7 +16,10 @@
       "weather-worker": "bun run src/node/weather-worker.ts",
       "exchange-rate-worker": "bun run src/node/exchange-rate-worker.ts",
       "aggregator": "bun run src/node/aggregator.ts",
-      "synthesis-worker": "bun run src/node/synthesis-worker.ts"
+      "synthesis-worker": "bun run src/node/synthesis-worker.ts",
+      "benchmark": "bun run src/scripts/run-benchmark.ts -- --provider=all",
+      "benchmark:ollama": "bun run src/scripts/run-benchmark.ts -- --provider=ollama",
+      "benchmark:openai": "bun run src/scripts/run-benchmark.ts -- --provider=openai"
    },
    "devDependencies": {
       "@types/bun": "latest",

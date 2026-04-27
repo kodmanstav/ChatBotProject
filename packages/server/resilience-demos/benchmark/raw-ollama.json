@@ -1,0 +1,1934 @@
+{
+  "mode": "ollama",
+  "at": "2026-04-27T06:46:11.540Z",
+  "count": 14,
+  "records": [
+    {
+      "category": "math",
+      "run": "ollama",
+      "userInput": "What is 7 plus 8?",
+      "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+      "startIso": "2026-04-26T23:04:47.999Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:04:47.999Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is 7 plus 8?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:05:21.718Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "7 + 8"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:05:21.840Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "7 + 8"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:05:21.899Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "7 + 8",
+              "value": 15
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:05:21.989Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "expression": "7 + 8",
+                "value": 15
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:05:22.008Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "expression": "7 + 8",
+                "value": 15
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "a84aa92c-3861-448b-9fb0-82e740166850",
+          "timestamp": "2026-04-26T23:05:23.184Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The result of the expression 7 + 8 is 15."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 33719,
+        "orchestratorDispatchMs": [
+          122
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 19,
+        "synthesisMs": 1176,
+        "e2eMs": 35185
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "math",
+      "run": "ollama",
+      "userInput": "What is 12 times 9?",
+      "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+      "startIso": "2026-04-26T23:05:24.220Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:24.220Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is 12 times 9?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:48.584Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "12 * 9"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:48.599Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "12 * 9"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:48.609Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "12 * 9",
+              "value": 108
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:48.635Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "expression": "12 * 9",
+                "value": 108
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:48.642Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "expression": "12 * 9",
+                "value": 108
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "6ee50fb3-bc9e-490b-bfdf-a61bab2a807f",
+          "timestamp": "2026-04-26T23:05:50.085Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The result of multiplying 12 by 9 is 108."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 24364,
+        "orchestratorDispatchMs": [
+          15
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 7,
+        "synthesisMs": 1443,
+        "e2eMs": 25865
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "math",
+      "run": "ollama",
+      "userInput": "What is 144 divided by 12?",
+      "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+      "startIso": "2026-04-26T23:05:50.631Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:05:50.631Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is 144 divided by 12?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:06:15.809Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "144 / 12"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:06:15.822Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "144 / 12"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:06:15.837Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "144 / 12",
+              "value": 12
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:06:15.912Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "expression": "144 / 12",
+                "value": 12
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:06:15.925Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "expression": "144 / 12",
+                "value": 12
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "ab8aeb39-b571-412f-8c51-3478b7da19e2",
+          "timestamp": "2026-04-26T23:06:16.688Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The result of 144 divided by 12 is 12."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 25178,
+        "orchestratorDispatchMs": [
+          13
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 13,
+        "synthesisMs": 763,
+        "e2eMs": 26057
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "math",
+      "run": "ollama",
+      "userInput": "What is 100 minus 37?",
+      "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+      "startIso": "2026-04-26T23:06:17.988Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:17.988Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is 100 minus 37?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:42.345Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "100 - 37"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:42.367Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "100 - 37",
+              "value": 63
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:42.359Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "100 - 37"
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:42.431Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "expression": "100 - 37",
+                "value": 63
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:42.440Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "expression": "100 - 37",
+                "value": 63
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "7fbd2362-3c09-46d7-93da-bd5b3f1afeea",
+          "timestamp": "2026-04-26T23:06:43.420Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The result of the calculation is 63."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 24357,
+        "orchestratorDispatchMs": [
+          14
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 9,
+        "synthesisMs": 980,
+        "e2eMs": 25432
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "math",
+      "run": "ollama",
+      "userInput": "What is 3.5 times 2?",
+      "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+      "startIso": "2026-04-26T23:06:44.638Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:06:44.638Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is 3.5 times 2?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:07:07.745Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "3.5 * 2"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:07:07.761Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "3.5 * 2",
+              "value": 7
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:07:07.755Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "3.5 * 2"
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:07:07.784Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "expression": "3.5 * 2",
+                "value": 7
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:07:07.799Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "expression": "3.5 * 2",
+                "value": 7
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "a4f96012-e582-4a96-b06d-6d96102bdcfe",
+          "timestamp": "2026-04-26T23:07:09.076Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The result of the calculation \\(3.5 \\times 2\\) is 7."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 23107,
+        "orchestratorDispatchMs": [
+          10
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 15,
+        "synthesisMs": 1277,
+        "e2eMs": 24438
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "fx_math",
+      "run": "ollama",
+      "userInput": "How much is 100 USD in ILS?",
+      "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+      "startIso": "2026-04-26T23:07:09.862Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:09.862Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "How much is 100 USD in ILS?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.556Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getExchangeRate",
+                "parameters": {
+                  "from": "USD",
+                  "to": "ILS"
+                }
+              },
+              {
+                "step": 2,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "100 * {{steps.1.result.rate}}"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.567Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "parameters": {
+              "from": "USD",
+              "to": "ILS"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.596Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "success": true,
+            "result": {
+              "from": "USD",
+              "to": "ILS",
+              "rate": 3.7
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.655Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "100 * 3.7"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.684Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "100 * 3.7",
+              "value": 370
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.761Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 2,
+            "results": {
+              "1": {
+                "from": "USD",
+                "to": "ILS",
+                "rate": 3.7
+              },
+              "2": {
+                "expression": "100 * 3.7",
+                "value": 370
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:57.778Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "from": "USD",
+                "to": "ILS",
+                "rate": 3.7
+              },
+              "2": {
+                "expression": "100 * 3.7",
+                "value": 370
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "46b2face-e754-48eb-b134-41a429fc205b",
+          "timestamp": "2026-04-26T23:07:58.630Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The exchange rate from USD to ILS is 3.7. Therefore, converting 100 USD would give you 370 ILS."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 47694,
+        "orchestratorDispatchMs": [
+          11,
+          59
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 17,
+        "synthesisMs": 852,
+        "e2eMs": 48768
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "fx_math",
+      "run": "ollama",
+      "userInput": "How much is 50 EUR in USD?",
+      "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+      "startIso": "2026-04-26T23:07:59.429Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:07:59.429Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "How much is 50 EUR in USD?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.520Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getExchangeRate",
+                "parameters": {
+                  "from": "EUR",
+                  "to": "USD"
+                }
+              },
+              {
+                "step": 2,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "50 * {{steps.1.result.rate}}"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.536Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "parameters": {
+              "from": "EUR",
+              "to": "USD"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.556Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "success": true,
+            "result": {
+              "from": "EUR",
+              "to": "USD",
+              "rate": 1.09
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.588Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "50 * 1.09"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.607Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "50 * 1.09",
+              "value": 54.50000000000001
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.636Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 2,
+            "results": {
+              "1": {
+                "from": "EUR",
+                "to": "USD",
+                "rate": 1.09
+              },
+              "2": {
+                "expression": "50 * 1.09",
+                "value": 54.50000000000001
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:44.649Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "from": "EUR",
+                "to": "USD",
+                "rate": 1.09
+              },
+              "2": {
+                "expression": "50 * 1.09",
+                "value": 54.50000000000001
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "5f45b5a7-cafc-49cb-a9fa-03c66d324627",
+          "timestamp": "2026-04-26T23:08:46.185Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The exchange rate from EUR to USD is 1.09. Therefore, converting 50 EUR would give you approximately 54.50 USD."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 45091,
+        "orchestratorDispatchMs": [
+          16,
+          32
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 13,
+        "synthesisMs": 1536,
+        "e2eMs": 46756
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "fx_math",
+      "run": "ollama",
+      "userInput": "Convert 200 GBP to ILS",
+      "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+      "startIso": "2026-04-26T23:08:47.333Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:08:47.333Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "Convert 200 GBP to ILS"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.794Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getExchangeRate",
+                "parameters": {
+                  "from": "GBP",
+                  "to": "ILS"
+                }
+              },
+              {
+                "step": 2,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "200 * {{steps.1.result.rate}}"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.807Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "parameters": {
+              "from": "GBP",
+              "to": "ILS"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.817Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "success": true,
+            "result": {
+              "from": "GBP",
+              "to": "ILS",
+              "rate": 4.65
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.858Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "200 * 4.65"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.870Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "200 * 4.65",
+              "value": 930.0000000000001
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.908Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 2,
+            "results": {
+              "1": {
+                "from": "GBP",
+                "to": "ILS",
+                "rate": 4.65
+              },
+              "2": {
+                "expression": "200 * 4.65",
+                "value": 930.0000000000001
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:23.916Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "from": "GBP",
+                "to": "ILS",
+                "rate": 4.65
+              },
+              "2": {
+                "expression": "200 * 4.65",
+                "value": 930.0000000000001
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "b42a091a-f738-4359-a4e8-4b1df8d654fa",
+          "timestamp": "2026-04-26T23:09:24.950Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The exchange rate from GBP to ILS is 4.65. Therefore, converting 200 GBP would give you approximately 930 ILS."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 36461,
+        "orchestratorDispatchMs": [
+          13,
+          41
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 8,
+        "synthesisMs": 1034,
+        "e2eMs": 37617
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    },
+    {
+      "category": "weather_chat",
+      "run": "ollama",
+      "userInput": "What is the weather in London? Should I bring a coat tomorrow?",
+      "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+      "startIso": "2026-04-26T23:09:25.480Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:09:25.480Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is the weather in London? Should I bring a coat tomorrow?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:08.534Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getWeather",
+                "parameters": {
+                  "location": "London"
+                }
+              },
+              {
+                "step": 2,
+                "tool": "generalChat",
+                "parameters": {
+                  "userInput": "Weather in London tomorrow is {{steps.1.result.forecast}}. Should the user bring a coat?"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": false
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:08.545Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getWeather",
+            "parameters": {
+              "location": "London"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:11.849Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getWeather",
+            "success": true,
+            "result": {
+              "location": "London",
+              "forecast": "11°C"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:12.023Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 2,
+            "tool": "generalChat",
+            "parameters": {
+              "userInput": "Weather in London tomorrow is 11°C. Should the user bring a coat?"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:20.690Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 2,
+            "tool": "generalChat",
+            "success": true,
+            "result": {
+              "text": "Yes, it's likely to be chilly. A coat would be a good idea!"
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:21.116Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 2,
+            "results": {
+              "1": {
+                "location": "London",
+                "forecast": "11°C"
+              },
+              "2": {
+                "text": "Yes, it's likely to be chilly. A coat would be a good idea!"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:21.121Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "location": "London",
+                "forecast": "11°C"
+              },
+              "2": {
+                "text": "Yes, it's likely to be chilly. A coat would be a good idea!"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "bb7b2574-33e7-4182-a2b8-da68735b6db9",
+          "timestamp": "2026-04-26T23:10:22.692Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The weather in London is currently 11°C, so yes, it's likely to be chilly. A coat would be a good idea!"
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 43054,
+        "orchestratorDispatchMs": [
+          11,
+          174
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [
+          8667
+        ],
+        "aggregatorMs": 5,
+        "synthesisMs": 1571,
+        "e2eMs": 57212
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "ollama_success"
+    },
+    {
+      "category": "weather_chat",
+      "run": "ollama",
+      "userInput": "What is the weather in Paris today?",
+      "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+      "startIso": "2026-04-26T23:10:23.208Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:10:23.208Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is the weather in Paris today?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:11:53.060Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getWeather",
+                "parameters": {
+                  "location": "Paris"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": false
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:11:53.130Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getWeather",
+            "parameters": {
+              "location": "Paris"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:11:53.953Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getWeather",
+            "success": true,
+            "result": {
+              "location": "Paris",
+              "forecast": "15.1°C"
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:11:54.017Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "location": "Paris",
+                "forecast": "15.1°C"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:11:54.059Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "location": "Paris",
+                "forecast": "15.1°C"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "2f8d1d19-1752-4707-b033-274f2c58eadf",
+          "timestamp": "2026-04-26T23:11:55.024Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The current temperature in Paris is 15.1°C."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 89852,
+        "orchestratorDispatchMs": [
+          70
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 42,
+        "synthesisMs": 965,
+        "e2eMs": 91816
+      },
+      "routerProvider": "failed",
+      "llmProvider": "none"
+    },
+    {
+      "category": "weather_chat",
+      "run": "ollama",
+      "userInput": "What is the weather in Tokyo? Answer briefly.",
+      "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+      "startIso": "2026-04-26T23:11:56.217Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:11:56.217Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "What is the weather in Tokyo? Answer briefly."
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:12:27.452Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getWeather",
+                "parameters": {
+                  "location": "Tokyo"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": false
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:12:27.531Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getWeather",
+            "parameters": {
+              "location": "Tokyo"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:12:27.733Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getWeather",
+            "success": true,
+            "result": {
+              "location": "Tokyo",
+              "forecast": "13.1°C"
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:12:27.750Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "location": "Tokyo",
+                "forecast": "13.1°C"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:12:27.768Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "location": "Tokyo",
+                "forecast": "13.1°C"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "4254f2a6-3f15-4278-8013-2c57754e8c7d",
+          "timestamp": "2026-04-26T23:12:28.548Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The current temperature in Tokyo is 13.1°C."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 31235,
+        "orchestratorDispatchMs": [
+          79
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 18,
+        "synthesisMs": 780,
+        "e2eMs": 32331
+      },
+      "routerProvider": "openai_fallback",
+      "llmProvider": "none"
+    },
+    {
+      "category": "rag",
+      "run": "ollama",
+      "userInput": "Describe the XPhone 12.",
+      "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+      "startIso": "2026-04-27T06:29:35.872Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:29:35.872Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "Describe the XPhone 12."
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:32:37.759Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getProductInformation",
+                "parameters": {
+                  "query": "XPhone 12"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": false
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:32:37.892Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getProductInformation",
+            "parameters": {
+              "query": "XPhone 12"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:32:38.292784+00:00",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getProductInformation",
+            "success": true,
+            "result": {
+              "retrieved_context": "Product match 1: Wireless Headphones X2\nProduct: Wireless Headphones X2\n\nDescription:\nWireless Headphones X2 are over-ear Bluetooth headphones built for clear sound and all-day comfort.\n\nFeatures:\n- Active noise cancellation\n- Up to 30 hours of wireless playback\n- Quick-charge: 10 minutes for 3 hours of use\n- Built-in microphone for calls\n- Foldable design with carrying case\n\nBattery:\nUp to 30 hours of listening on a single charge with ANC enabled.\n\nCompatibility:\nWorks with any Bluetooth-enabled phone, tablet, or laptop.\n\nPrice:\n$249\n\n---\n\nProduct match 2: Gaming Mouse G7\nProduct: Gaming Mouse G7\n\nDescription:\nGaming Mouse G7 is a lightweight wired gaming mouse optimized for precision and fast reaction times.\n\nFeatures:\n- Adjustable DPI up to 16,000\n- Customizable RGB lighting\n- 6 programmable buttons\n- Low-latency wired USB connection\n- Textured side grips for better control\n\nBattery:\nNot applicable (wired USB power).\n\nCompatibility:\nCompatible with Windows, macOS, and Linux. Works with popular game launchers.\n\nPrice:\n$79\n\n---\n\nProduct match 3: Laptop Pro\nProduct: Laptop Pro\n\nDescription:\nLaptop Pro is a high‑performance laptop designed for professionals who need power and portability.\n\nFeatures:\n- 15.6\\\" Retina-quality display\n- Latest-generation multi-core processor\n- 16 GB or 32 GB RAM options\n- Fast NVMe SSD storage\n- Backlit keyboard and large trackpad\n\nBattery:\nUp to 10 hours of mixed productivity use.\n\nCompatibility:\nSupports all major operating systems and modern peripherals over USB‑C and HDMI.\n\nPrice:\nStarting at $1,499",
+              "metadata": {
+                "answer_type": "product_context",
+                "matched_products": [
+                  "Wireless Headphones X2",
+                  "Gaming Mouse G7",
+                  "Laptop Pro"
+                ],
+                "match_count": 3
+              },
+              "query": "XPhone 12"
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:32:38.319Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 1,
+            "results": {
+              "1": {
+                "retrieved_context": "Product match 1: Wireless Headphones X2\nProduct: Wireless Headphones X2\n\nDescription:\nWireless Headphones X2 are over-ear Bluetooth headphones built for clear sound and all-day comfort.\n\nFeatures:\n- Active noise cancellation\n- Up to 30 hours of wireless playback\n- Quick-charge: 10 minutes for 3 hours of use\n- Built-in microphone for calls\n- Foldable design with carrying case\n\nBattery:\nUp to 30 hours of listening on a single charge with ANC enabled.\n\nCompatibility:\nWorks with any Bluetooth-enabled phone, tablet, or laptop.\n\nPrice:\n$249\n\n---\n\nProduct match 2: Gaming Mouse G7\nProduct: Gaming Mouse G7\n\nDescription:\nGaming Mouse G7 is a lightweight wired gaming mouse optimized for precision and fast reaction times.\n\nFeatures:\n- Adjustable DPI up to 16,000\n- Customizable RGB lighting\n- 6 programmable buttons\n- Low-latency wired USB connection\n- Textured side grips for better control\n\nBattery:\nNot applicable (wired USB power).\n\nCompatibility:\nCompatible with Windows, macOS, and Linux. Works with popular game launchers.\n\nPrice:\n$79\n\n---\n\nProduct match 3: Laptop Pro\nProduct: Laptop Pro\n\nDescription:\nLaptop Pro is a high‑performance laptop designed for professionals who need power and portability.\n\nFeatures:\n- 15.6\\\" Retina-quality display\n- Latest-generation multi-core processor\n- 16 GB or 32 GB RAM options\n- Fast NVMe SSD storage\n- Backlit keyboard and large trackpad\n\nBattery:\nUp to 10 hours of mixed productivity use.\n\nCompatibility:\nSupports all major operating systems and modern peripherals over USB‑C and HDMI.\n\nPrice:\nStarting at $1,499",
+                "metadata": {
+                  "answer_type": "product_context",
+                  "matched_products": [
+                    "Wireless Headphones X2",
+                    "Gaming Mouse G7",
+                    "Laptop Pro"
+                  ],
+                  "match_count": 3
+                },
+                "query": "XPhone 12"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:32:38.348Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "retrieved_context": "Product match 1: Wireless Headphones X2\nProduct: Wireless Headphones X2\n\nDescription:\nWireless Headphones X2 are over-ear Bluetooth headphones built for clear sound and all-day comfort.\n\nFeatures:\n- Active noise cancellation\n- Up to 30 hours of wireless playback\n- Quick-charge: 10 minutes for 3 hours of use\n- Built-in microphone for calls\n- Foldable design with carrying case\n\nBattery:\nUp to 30 hours of listening on a single charge with ANC enabled.\n\nCompatibility:\nWorks with any Bluetooth-enabled phone, tablet, or laptop.\n\nPrice:\n$249\n\n---\n\nProduct match 2: Gaming Mouse G7\nProduct: Gaming Mouse G7\n\nDescription:\nGaming Mouse G7 is a lightweight wired gaming mouse optimized for precision and fast reaction times.\n\nFeatures:\n- Adjustable DPI up to 16,000\n- Customizable RGB lighting\n- 6 programmable buttons\n- Low-latency wired USB connection\n- Textured side grips for better control\n\nBattery:\nNot applicable (wired USB power).\n\nCompatibility:\nCompatible with Windows, macOS, and Linux. Works with popular game launchers.\n\nPrice:\n$79\n\n---\n\nProduct match 3: Laptop Pro\nProduct: Laptop Pro\n\nDescription:\nLaptop Pro is a high‑performance laptop designed for professionals who need power and portability.\n\nFeatures:\n- 15.6\\\" Retina-quality display\n- Latest-generation multi-core processor\n- 16 GB or 32 GB RAM options\n- Fast NVMe SSD storage\n- Backlit keyboard and large trackpad\n\nBattery:\nUp to 10 hours of mixed productivity use.\n\nCompatibility:\nSupports all major operating systems and modern peripherals over USB‑C and HDMI.\n\nPrice:\nStarting at $1,499",
+                "metadata": {
+                  "answer_type": "product_context",
+                  "matched_products": [
+                    "Wireless Headphones X2",
+                    "Gaming Mouse G7",
+                    "Laptop Pro"
+                  ],
+                  "match_count": 3
+                },
+                "query": "XPhone 12"
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "846d8b71-f364-4860-bb37-d9b83287d58e",
+          "timestamp": "2026-04-27T06:32:43.491Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "I found some products that might interest you, although they are not directly related to the XPhone 12. Here are the details:\n\n1. **Wireless Headphones X2**\n   - **Description:** Over-ear Bluetooth headphones with active noise cancellation.\n   - **Features:** Up to 30 hours of wireless playback, quick-charge (10 minutes for 3 hours), built-in microphone, and a foldable design with a carrying case.\n   - **Price:** $249\n\n2. **Gaming Mouse G7**\n   - **Description:** Lightweight wired gaming mouse optimized for precision.\n   - **Features:** Adjustable DPI up to 16,000, customizable RGB lighting, 6 programmable buttons, and textured side grips.\n   - **Price:** $79\n\n3. **Laptop Pro**\n   - **Description:** High-performance laptop designed for professionals.\n   - **Features:** 15.6\" Retina-quality display, multi-core processor, 16 GB or 32 GB RAM options, and fast NVMe SSD storage.\n   - **Price:** Starting at $1,499\n\nIf you need more information about any of these products or have other questions, feel free to ask!"
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 181887,
+        "orchestratorDispatchMs": [
+          133
+        ],
+        "toolRagMs": [
+          400
+        ],
+        "toolLlmMs": [],
+        "aggregatorMs": 29,
+        "synthesisMs": 5143,
+        "e2eMs": 187619
+      },
+      "routerProvider": "openai_fallback",
+      "llmProvider": "none"
+    },
+    {
+      "category": "complex",
+      "run": "ollama",
+      "userInput": "Get the exchange rate from 100 USD to ILS, multiply the result by 2, and say the final ILS value in one sentence.",
+      "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+      "startIso": "2026-04-27T06:44:06.247Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:06.247Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "Get the exchange rate from 100 USD to ILS, multiply the result by 2, and say the final ILS value in one sentence."
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.179Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getExchangeRate",
+                "parameters": {
+                  "base": "USD",
+                  "target": "ILS"
+                }
+              },
+              {
+                "step": 2,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "100 * {{steps.1.result.rate}} * 2"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.286Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "success": true,
+            "result": {
+              "from": "USD",
+              "to": "ILS",
+              "rate": 3.7
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.264Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "parameters": {
+              "base": "USD",
+              "target": "ILS"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.424Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "100 * 3.7 * 2"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.443Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "100 * 3.7 * 2",
+              "value": 740
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.471Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 2,
+            "results": {
+              "1": {
+                "from": "USD",
+                "to": "ILS",
+                "rate": 3.7
+              },
+              "2": {
+                "expression": "100 * 3.7 * 2",
+                "value": 740
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:42.492Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "from": "USD",
+                "to": "ILS",
+                "rate": 3.7
+              },
+              "2": {
+                "expression": "100 * 3.7 * 2",
+                "value": 740
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "7e5c1974-b1e6-4230-9f03-eb6cd0e6d586",
+          "timestamp": "2026-04-27T06:44:44.500Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The conversion from USD to ILS at the rate of 3.7 means that 100 USD would equal 740 ILS."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 35932,
+        "orchestratorDispatchMs": [
+          85,
+          138
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 21,
+        "synthesisMs": 2008,
+        "e2eMs": 38253
+      },
+      "routerProvider": "openai_fallback",
+      "llmProvider": "none"
+    },
+    {
+      "category": "complex",
+      "run": "ollama",
+      "userInput": "How much is 75 USD in EUR, then add 1 to the EUR amount, then output that number only?",
+      "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+      "startIso": "2026-04-27T06:44:47.107Z",
+      "events": [
+        {
+          "eventType": "UserQueryReceived",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:44:47.107Z",
+          "topic": "user-commands",
+          "payload": {
+            "userInput": "How much is 75 USD in EUR, then add 1 to the EUR amount, then output that number only?"
+          }
+        },
+        {
+          "eventType": "PlanGenerated",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.746Z",
+          "topic": "conversation-events",
+          "payload": {
+            "plan": [
+              {
+                "step": 1,
+                "tool": "getExchangeRate",
+                "parameters": {
+                  "from": "USD",
+                  "to": "EUR"
+                }
+              },
+              {
+                "step": 2,
+                "tool": "calculateMath",
+                "parameters": {
+                  "expression": "{{steps.1.result.rate}} + 1"
+                }
+              }
+            ],
+            "final_answer_synthesis_required": true
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.776Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "parameters": {
+              "from": "USD",
+              "to": "EUR"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.819Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 1,
+            "tool": "getExchangeRate",
+            "success": true,
+            "result": {
+              "from": "USD",
+              "to": "EUR",
+              "rate": 0.92
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationRequested",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.871Z",
+          "topic": "tool-invocation-requests",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "parameters": {
+              "expression": "0.92 + 1"
+            }
+          }
+        },
+        {
+          "eventType": "ToolInvocationResulted",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.894Z",
+          "topic": "conversation-events",
+          "payload": {
+            "step": 2,
+            "tool": "calculateMath",
+            "success": true,
+            "result": {
+              "expression": "0.92 + 1",
+              "value": 1.92
+            }
+          }
+        },
+        {
+          "eventType": "PlanCompleted",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.977Z",
+          "topic": "conversation-events",
+          "payload": {
+            "completedSteps": 2,
+            "results": {
+              "1": {
+                "from": "USD",
+                "to": "EUR",
+                "rate": 0.92
+              },
+              "2": {
+                "expression": "0.92 + 1",
+                "value": 1.92
+              }
+            }
+          }
+        },
+        {
+          "eventType": "SynthesizeFinalAnswerRequested",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:04.992Z",
+          "topic": "user-commands",
+          "payload": {
+            "planResults": {
+              "1": {
+                "from": "USD",
+                "to": "EUR",
+                "rate": 0.92
+              },
+              "2": {
+                "expression": "0.92 + 1",
+                "value": 1.92
+              }
+            }
+          }
+        },
+        {
+          "eventType": "FinalAnswerSynthesized",
+          "conversationId": "82f56ec0-e6f2-4aad-9516-5239c4c4d302",
+          "timestamp": "2026-04-27T06:46:06.603Z",
+          "topic": "conversation-events",
+          "payload": {
+            "finalAnswer": "The exchange rate from USD to EUR is 0.92. When you add 1 to this rate, the total is 1.92."
+          }
+        }
+      ],
+      "metrics": {
+        "routerMs": 77639,
+        "orchestratorDispatchMs": [
+          30,
+          52
+        ],
+        "toolRagMs": [],
+        "toolLlmMs": [],
+        "aggregatorMs": 15,
+        "synthesisMs": 1611,
+        "e2eMs": 79496
+      },
+      "routerProvider": "ollama_success",
+      "llmProvider": "none"
+    }
+  ]
+}
